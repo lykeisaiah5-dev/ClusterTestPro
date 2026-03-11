@@ -1,0 +1,2013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClusterTest Pro — Gauge Sweep Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0c0f; --surface:#111418; --surface2:#181c22; --border:#1e2530;
+    --accent:#e8a020; --accent2:#ff4d1c; --green:#1aff8c; --blue:#1ab4ff; --purple:#b06aff;
+    --text:#d0d8e8; --text-dim:#5a6478; --text-mid:#8a96aa;
+    --glow-green:rgba(26,255,140,0.12); --glow-purple:rgba(176,106,255,0.12);
+    --proto-can:#1ab4ff; --proto-cls2:#b06aff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;
+    background-image:radial-gradient(ellipse 80% 40% at 50% -10%,rgba(232,160,32,0.05) 0%,transparent 70%),
+    repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,0.012) 39px,rgba(255,255,255,0.012) 40px),
+    repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,0.012) 39px,rgba(255,255,255,0.012) 40px);}
+
+  /* HEADER */
+  header{display:flex;align-items:center;justify-content:space-between;padding:13px 26px;border-bottom:1px solid var(--border);background:rgba(10,12,15,0.93);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;gap:14px;}
+  .logo{font-family:'Orbitron',monospace;font-weight:900;font-size:0.98rem;letter-spacing:0.12em;color:var(--accent);text-shadow:0 0 20px rgba(232,160,32,0.5);display:flex;align-items:center;gap:9px;flex-shrink:0;}
+  .logo-icon{width:25px;height:25px;border:2px solid var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.58rem;animation:pulse-logo 3s ease-in-out infinite;}
+  @keyframes pulse-logo{0%,100%{box-shadow:0 0 10px rgba(232,160,32,0.4)}50%{box-shadow:0 0 22px rgba(232,160,32,0.7)}}
+  .proto-badge{display:flex;align-items:center;gap:6px;font-family:'Orbitron',monospace;font-size:0.58rem;font-weight:700;letter-spacing:0.12em;padding:5px 11px;border-radius:20px;border:1px solid;transition:all 0.3s;}
+  .proto-badge.can {border-color:var(--proto-can); color:var(--proto-can); background:rgba(26,180,255,0.08);}
+  .proto-badge.cls2{border-color:var(--proto-cls2);color:var(--proto-cls2);background:rgba(176,106,255,0.08);}
+  .proto-dot{width:6px;height:6px;border-radius:50%;animation:blink 2s infinite;}
+  .can  .proto-dot{background:var(--proto-can);}
+  .cls2 .proto-dot{background:var(--proto-cls2);}
+  .port-row{display:flex;gap:7px;align-items:center;}
+  .port-input{background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:0.74rem;padding:6px 9px;border-radius:4px;outline:none;transition:border-color 0.2s;}
+  .port-input:focus{border-color:var(--accent);}
+  #portInput{width:100px;} #baudSelect{width:84px;}
+  .conn-status{display:flex;align-items:center;gap:7px;flex-shrink:0;}
+  .conn-dot{width:8px;height:8px;border-radius:50%;background:var(--text-dim);transition:all 0.3s;}
+  .conn-dot.connected{background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 2s infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.35}}
+  #connLabel{font-family:'Share Tech Mono',monospace;font-size:0.68rem;color:var(--text-dim);}
+
+  /* BUTTONS */
+  .btn{font-family:'Orbitron',monospace;font-size:0.6rem;font-weight:600;letter-spacing:0.1em;padding:6px 12px;border:1px solid var(--border);background:var(--surface);color:var(--text-mid);border-radius:4px;cursor:pointer;transition:all 0.2s;text-transform:uppercase;white-space:nowrap;}
+  .btn:hover{border-color:var(--accent);color:var(--accent);}
+  .btn.primary{border-color:var(--accent);color:var(--accent);background:rgba(232,160,32,0.08);}
+  .btn.primary:hover{background:rgba(232,160,32,0.18);}
+  .btn.danger{border-color:var(--accent2);color:var(--accent2);background:rgba(255,77,28,0.06);}
+  .btn.danger:hover{background:rgba(255,77,28,0.14);}
+  .btn.active-green{border-color:var(--green);color:var(--green);background:var(--glow-green);box-shadow:0 0 10px rgba(26,255,140,0.2);}
+  .btn.active-purple{border-color:var(--purple);color:var(--purple);background:var(--glow-purple);box-shadow:0 0 10px rgba(176,106,255,0.2);}
+
+  /* LAYOUT */
+  .main{display:grid;grid-template-columns:254px 1fr;min-height:calc(100vh - 55px);}
+
+  /* SIDEBAR */
+  .sidebar{border-right:1px solid var(--border);padding:18px 16px;display:flex;flex-direction:column;gap:20px;overflow-y:auto;}
+  .sb-title{font-family:'Orbitron',monospace;font-size:0.56rem;font-weight:700;letter-spacing:0.18em;color:var(--text-dim);text-transform:uppercase;margin-bottom:9px;padding-bottom:5px;border-bottom:1px solid var(--border);}
+  .proto-switch{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+  .proto-btn{background:var(--surface);border:1px solid var(--border);font-family:'Orbitron',monospace;font-size:0.58rem;font-weight:700;letter-spacing:0.08em;padding:11px 6px;border-radius:6px;cursor:pointer;transition:all 0.25s;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--text-dim);}
+  .proto-btn .pb-title{font-size:0.7rem;}
+  .proto-btn .pb-sub{font-size:0.5rem;opacity:0.55;font-family:'Share Tech Mono',monospace;}
+  .proto-btn.can-active {border-color:var(--proto-can); color:var(--proto-can); background:rgba(26,180,255,0.09); box-shadow:0 0 12px rgba(26,180,255,0.1);}
+  .proto-btn.cls2-active{border-color:var(--proto-cls2);color:var(--proto-cls2);background:rgba(176,106,255,0.09);box-shadow:0 0 12px rgba(176,106,255,0.1);}
+  .vehicle-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+  .vehicle-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-mid);font-family:'Orbitron',monospace;font-size:0.55rem;font-weight:600;letter-spacing:0.07em;padding:8px 4px;border-radius:4px;cursor:pointer;transition:all 0.2s;text-align:center;display:flex;flex-direction:column;gap:3px;align-items:center;}
+  .vehicle-btn .vmake{font-size:0.5rem;opacity:0.55;font-family:'Share Tech Mono',monospace;}
+  .vehicle-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .vehicle-btn.selected{border-color:var(--accent);color:var(--accent);background:rgba(232,160,32,0.09);}
+  .vehicle-btn.cls2-only.selected{border-color:var(--proto-cls2);color:var(--proto-cls2);background:rgba(176,106,255,0.09);}
+  .proto-info-box{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 11px;font-family:'Share Tech Mono',monospace;font-size:0.66rem;line-height:1.9;color:var(--text-dim);transition:border-color 0.3s;}
+  .proto-info-box.can-theme {border-color:rgba(26,180,255,0.18);}
+  .proto-info-box.cls2-theme{border-color:rgba(176,106,255,0.18);}
+  .proto-info-box .val{color:var(--blue);}
+  .proto-info-box .val.purple{color:var(--purple);}
+  .proto-info-box .key{color:var(--text-mid);}
+  .mode-btns{display:flex;flex-direction:column;gap:5px;}
+  .mode-btn{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text-mid);font-family:'Orbitron',monospace;font-size:0.59rem;font-weight:600;letter-spacing:0.1em;padding:10px 12px;border-radius:4px;cursor:pointer;transition:all 0.2s;text-align:left;display:flex;align-items:center;gap:8px;}
+  .mode-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .mode-btn.active{border-color:var(--green);color:var(--green);background:var(--glow-green);}
+  .log-box{background:#060809;border:1px solid var(--border);border-radius:5px;padding:8px 9px;height:115px;overflow-y:auto;font-family:'Share Tech Mono',monospace;font-size:0.6rem;line-height:1.75;}
+  .log-box::-webkit-scrollbar{width:3px;} .log-box::-webkit-scrollbar-thumb{background:var(--border);}
+  .log-entry{display:flex;gap:6px;}
+  .log-entry .ts{color:var(--text-dim);opacity:0.42;flex-shrink:0;}
+  .msg-ok{color:var(--green);} .msg-warn{color:var(--accent);} .msg-err{color:var(--accent2);} .msg-info{color:var(--blue);} .msg-cls2{color:var(--purple);}
+
+  /* CONTENT */
+  .content{padding:22px 26px;display:flex;flex-direction:column;gap:20px;overflow-y:auto;}
+  .controls-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+  .section-title{font-family:'Orbitron',monospace;font-size:0.66rem;font-weight:700;letter-spacing:0.14em;color:var(--text-mid);text-transform:uppercase;}
+  .sweep-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .speed-btn{font-family:'Orbitron',monospace;font-size:0.54rem;font-weight:600;letter-spacing:0.08em;padding:5px 8px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim);border-radius:4px;cursor:pointer;transition:all 0.2s;}
+  .speed-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(232,160,32,0.08);}
+
+  /* ── TAB NAV ── */
+  .tab-nav{display:flex;gap:6px;border-bottom:1px solid var(--border);padding-bottom:0;margin-bottom:4px;}
+  .tab-btn{font-family:'Orbitron',monospace;font-size:0.62rem;font-weight:700;letter-spacing:0.1em;padding:9px 18px;border:1px solid transparent;border-bottom:none;background:transparent;color:var(--text-dim);cursor:pointer;border-radius:6px 6px 0 0;transition:all 0.2s;position:relative;top:1px;}
+  .tab-btn:hover{color:var(--text);background:var(--surface);}
+  .tab-btn.tab-active{background:var(--surface);border-color:var(--border);color:var(--accent);border-bottom-color:var(--bg);}
+
+  /* ── EEPROM LAYOUT ── */
+  .ee-layout{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;}
+  .ee-left{display:flex;flex-direction:column;gap:14px;}
+  .ee-right{display:flex;flex-direction:column;gap:14px;}
+  .ee-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;}
+  .ee-card-title{font-family:'Orbitron',monospace;font-size:0.6rem;font-weight:700;letter-spacing:0.14em;color:var(--text-mid);text-transform:uppercase;margin-bottom:11px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .ee-chip-label{font-family:'Share Tech Mono',monospace;font-size:0.62rem;font-weight:400;color:var(--accent);letter-spacing:0.05em;padding:2px 8px;border:1px solid rgba(232,160,32,0.3);border-radius:3px;background:rgba(232,160,32,0.05);}
+  .ee-badge{font-family:'Share Tech Mono',monospace;font-size:0.6rem;padding:2px 8px;border-radius:3px;border:1px solid var(--border);color:var(--text-dim);}
+  .ee-badge.ok{border-color:var(--green);color:var(--green);background:rgba(26,255,140,0.06);}
+  .ee-badge.warn{border-color:var(--accent);color:var(--accent);background:rgba(232,160,32,0.06);}
+  .ee-badge.err{border-color:var(--accent2);color:var(--accent2);background:rgba(255,77,28,0.06);}
+
+  /* Cluster selector */
+  .ee-cluster-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+  .ee-cl-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);padding:9px 10px;border-radius:5px;cursor:pointer;transition:all 0.2s;text-align:left;display:flex;flex-direction:column;gap:2px;}
+  .ee-cl-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .ee-cl-btn.ee-cl-active{border-color:var(--accent);background:rgba(232,160,32,0.07);}
+  .ee-cl-make{font-family:'Orbitron',monospace;font-size:0.68rem;font-weight:700;letter-spacing:0.08em;color:var(--accent);}
+  .ee-cl-btn:not(.ee-cl-active) .ee-cl-make{color:var(--text-mid);}
+  .ee-cl-sub{font-size:0.65rem;color:var(--text-mid);}
+  .ee-cl-chip{font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--text-dim);}
+
+  /* Hex input */
+  .ee-hex-input{width:100%;height:140px;background:#060809;border:1px solid var(--border);color:var(--green);font-family:'Share Tech Mono',monospace;font-size:0.72rem;padding:10px;border-radius:5px;resize:vertical;outline:none;line-height:1.7;transition:border-color 0.2s;}
+  .ee-hex-input:focus{border-color:var(--accent);}
+  .ee-btn-row{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap;}
+
+  /* Encoder */
+  .ee-enc-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+  .ee-field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+  .ee-unit-tag{font-family:'Share Tech Mono',monospace;font-size:0.68rem;color:var(--text-dim);padding:6px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;white-space:nowrap;}
+  .ee-conv-bar{display:flex;gap:10px;align-items:center;margin-top:9px;padding:7px 10px;background:#060809;border:1px solid var(--border);border-radius:4px;flex-wrap:wrap;}
+  .ee-conv-item{font-family:'Share Tech Mono',monospace;font-size:0.66rem;color:var(--blue);}
+  .ee-conv-sep{color:var(--border);}
+  /* encoder output table */
+  .ee-enc-block{margin-bottom:10px;}
+  .ee-enc-block-title{font-family:'Orbitron',monospace;font-size:0.52rem;font-weight:700;letter-spacing:0.12em;color:var(--text-dim);text-transform:uppercase;margin-bottom:5px;padding-bottom:4px;border-bottom:1px solid var(--border);}
+  .ee-enc-out-row{display:grid;grid-template-columns:90px 1fr 50px;gap:8px;align-items:center;padding:4px 6px;border-radius:3px;}
+  .ee-enc-out-row:nth-child(odd){background:rgba(255,255,255,0.02);}
+  .ee-enc-out-make{font-family:'Orbitron',monospace;font-size:0.54rem;font-weight:700;color:var(--accent);}
+  .ee-enc-out-bytes{font-family:'Share Tech Mono',monospace;font-size:0.76rem;color:var(--green);letter-spacing:0.1em;}
+  .ee-enc-out-addr{font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--text-dim);text-align:right;}
+  .ee-enc-out-note{font-family:'Share Tech Mono',monospace;font-size:0.57rem;color:var(--text-dim);grid-column:2/4;padding-bottom:2px;}
+  .ee-enc-group{display:flex;flex-direction:column;gap:4px;}
+  .ee-label{font-family:'Orbitron',monospace;font-size:0.52rem;font-weight:600;letter-spacing:0.1em;color:var(--text-dim);}
+  .ee-num-input{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:0.78rem;padding:6px 9px;border-radius:4px;outline:none;min-width:140px;transition:border-color 0.2s;}
+  .ee-num-input:focus{border-color:var(--accent);}
+  .ee-select{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:0.72rem;padding:6px 8px;border-radius:4px;outline:none;}
+  .ee-encode-result{background:#060809;border:1px solid var(--border);border-radius:5px;padding:10px 12px;min-height:58px;}
+  .ee-enc-placeholder{color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.62rem;line-height:1.6;}
+  .ee-enc-row-item{display:flex;align-items:baseline;gap:8px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .ee-enc-row-item:last-child{border-bottom:none;}
+  .ee-enc-make{font-family:'Orbitron',monospace;font-size:0.56rem;font-weight:700;color:var(--accent);width:80px;flex-shrink:0;}
+  .ee-enc-bytes{font-family:'Share Tech Mono',monospace;font-size:0.72rem;color:var(--green);letter-spacing:0.08em;flex:1;}
+  .ee-enc-note{font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--text-dim);}
+
+  /* Checksum */
+  .ee-csum-result{background:#060809;border:1px solid var(--border);border-radius:5px;padding:10px 12px;min-height:38px;margin-top:9px;font-family:'Share Tech Mono',monospace;font-size:0.74rem;}
+  .ee-csum-val{color:var(--green);letter-spacing:0.1em;}
+
+  /* Decode results */
+  .ee-result-placeholder{text-align:center;padding:30px 10px;color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.7rem;line-height:1.8;}
+  .ee-result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .ee-result-item{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:9px 11px;}
+  .ee-result-item.highlight{border-color:rgba(232,160,32,0.4);background:rgba(232,160,32,0.04);}
+  .ee-result-item.warn-item{border-color:rgba(255,77,28,0.35);background:rgba(255,77,28,0.04);}
+  .ee-result-label{font-family:'Orbitron',monospace;font-size:0.52rem;font-weight:700;letter-spacing:0.12em;color:var(--text-dim);margin-bottom:4px;}
+  .ee-result-val{font-family:'Share Tech Mono',monospace;font-size:1.0rem;color:var(--text);line-height:1.2;}
+  .ee-result-val.big{font-size:1.3rem;color:var(--accent);}
+  .ee-result-sub{font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--text-dim);margin-top:3px;}
+  .ee-result-raw{font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--blue);margin-top:2px;}
+
+  /* Byte map */
+  .ee-byte-map-wrap{overflow-x:auto;}
+  .ee-byte-map{display:grid;grid-template-columns:repeat(16,1fr);gap:2px;min-width:300px;}
+  .ee-bm-placeholder{grid-column:1/-1;text-align:center;padding:20px;color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.65rem;}
+  .ee-byte{font-family:'Share Tech Mono',monospace;font-size:0.52rem;padding:3px 2px;text-align:center;border-radius:2px;background:var(--surface2);color:var(--text-dim);cursor:default;transition:all 0.15s;border:1px solid transparent;position:relative;}
+  .ee-byte:hover{border-color:var(--border);color:var(--text);}
+  .ee-byte.b-mileage{background:rgba(232,160,32,0.18);color:var(--accent);border-color:rgba(232,160,32,0.3);}
+  .ee-byte.b-vin{background:rgba(26,180,255,0.14);color:var(--blue);border-color:rgba(26,180,255,0.25);}
+  .ee-byte.b-checksum{background:rgba(255,77,28,0.14);color:var(--accent2);border-color:rgba(255,77,28,0.25);}
+  .ee-byte.b-hours{background:rgba(176,106,255,0.14);color:var(--purple);border-color:rgba(176,106,255,0.25);}
+  .ee-byte.b-config{background:rgba(26,255,140,0.12);color:var(--green);border-color:rgba(26,255,140,0.2);}
+  .ee-byte.b-trip{background:rgba(26,255,140,0.07);color:rgba(26,255,140,0.7);border-color:rgba(26,255,140,0.12);}
+  .ee-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+  .ee-leg-item{display:flex;align-items:center;gap:5px;font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--text-dim);}
+  .ee-leg-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+
+  /* Reference table */
+  .ee-ref-table{display:flex;flex-direction:column;gap:2px;}
+  .ee-ref-row{display:grid;grid-template-columns:70px 70px 1fr;gap:8px;padding:5px 7px;border-radius:3px;font-family:'Share Tech Mono',monospace;font-size:0.64rem;line-height:1.5;}
+  .ee-ref-row:nth-child(odd){background:var(--surface2);}
+  .ee-ref-addr{color:var(--blue);}
+  .ee-ref-type{color:var(--accent);}
+  .ee-ref-desc{color:var(--text-dim);}
+  .ee-ref-head{font-family:'Orbitron',monospace;font-size:0.52rem;font-weight:700;letter-spacing:0.1em;color:var(--text-dim);padding:4px 7px;border-bottom:1px solid var(--border);margin-bottom:4px;display:grid;grid-template-columns:70px 70px 1fr;gap:8px;}
+
+  /* VIS ROW */
+  .gauge-vis-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+  .gauge-vis{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:13px 9px 10px;display:flex;flex-direction:column;align-items:center;gap:7px;position:relative;overflow:hidden;transition:border-color 0.3s;}
+  .gauge-vis::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity 0.3s;}
+  .gauge-vis.active-can  {border-color:rgba(232,160,32,0.35);}
+  .gauge-vis.active-can::before{opacity:1;background:linear-gradient(90deg,transparent,var(--accent),transparent);}
+  .gauge-vis.active-cls2 {border-color:rgba(176,106,255,0.4);}
+  .gauge-vis.active-cls2::before{opacity:1;background:linear-gradient(90deg,transparent,var(--purple),transparent);}
+  canvas.arc-gauge{width:98px;height:60px;}
+  .gauge-val-display{font-family:'Orbitron',monospace;font-size:1.22rem;font-weight:700;color:var(--accent);text-shadow:0 0 12px rgba(232,160,32,0.4);line-height:1;}
+  .gauge-vis.cls2-vis .gauge-val-display{color:var(--purple);text-shadow:0 0 14px rgba(176,106,255,0.5);}
+  .gauge-label{font-family:'Orbitron',monospace;font-size:0.5rem;font-weight:600;letter-spacing:0.13em;color:var(--text-dim);}
+  .gauge-unit-lbl{font-family:'Share Tech Mono',monospace;font-size:0.56rem;color:var(--text-dim);}
+  .proto-pip{position:absolute;top:6px;right:7px;font-family:'Orbitron',monospace;font-size:0.4rem;font-weight:700;letter-spacing:0.09em;padding:2px 5px;border-radius:3px;border:1px solid;}
+  .can-pip {color:var(--proto-can); border-color:rgba(26,180,255,0.3); background:rgba(26,180,255,0.07);}
+  .cls2-pip{color:var(--proto-cls2);border-color:rgba(176,106,255,0.3);background:rgba(176,106,255,0.07);}
+
+  /* GAUGE ROWS */
+  .gauge-rows{display:flex;flex-direction:column;gap:7px;}
+  .gauge-row{display:grid;grid-template-columns:92px 1fr 62px 42px;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:9px 13px;transition:border-color 0.2s;}
+  .gauge-row:hover{border-color:rgba(232,160,32,0.2);}
+  .gauge-row.sweeping{border-color:rgba(26,255,140,0.28);}
+  .gauge-row.cls2-row{border-left:2px solid rgba(176,106,255,0.35);}
+  .gauge-row.cls2-row.sweeping{border-color:rgba(176,106,255,0.45);border-left-color:var(--purple);}
+  .gauge-name{font-family:'Orbitron',monospace;font-size:0.58rem;font-weight:600;letter-spacing:0.07em;color:var(--text-mid);display:flex;flex-direction:column;gap:2px;}
+  .gauge-name .g-unit{font-size:0.5rem;color:var(--text-dim);font-weight:400;font-family:'Share Tech Mono',monospace;}
+  .gauge-name .g-pid {font-size:0.48rem;color:var(--text-dim);opacity:0.55;font-family:'Share Tech Mono',monospace;}
+  .slider-wrap{position:relative;display:flex;align-items:center;}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:2px;background:var(--border);outline:none;cursor:pointer;position:relative;z-index:1;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--accent);box-shadow:0 0 7px rgba(232,160,32,0.5);cursor:pointer;transition:transform 0.1s;}
+  input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.25);}
+  .cls2-row input[type=range]::-webkit-slider-thumb{background:var(--purple);box-shadow:0 0 7px rgba(176,106,255,0.5);}
+  .slider-fill{position:absolute;top:50%;transform:translateY(-50%);left:0;height:4px;border-radius:2px;pointer-events:none;background:linear-gradient(90deg,var(--accent),rgba(232,160,32,0.35));transition:width 0.04s;}
+  .cls2-row .slider-fill{background:linear-gradient(90deg,var(--purple),rgba(176,106,255,0.35));}
+  .gauge-num-input{background:var(--surface2);border:1px solid var(--border);color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:0.8rem;padding:4px 5px;border-radius:4px;width:100%;text-align:center;outline:none;transition:border-color 0.2s;}
+  .gauge-num-input:focus{border-color:var(--accent);}
+  .cls2-row .gauge-num-input{color:var(--purple);}
+  .cls2-row .gauge-num-input:focus{border-color:var(--purple);}
+  .sweep-toggle{width:33px;height:18px;background:var(--border);border-radius:9px;position:relative;cursor:pointer;transition:background 0.2s;border:none;flex-shrink:0;}
+  .sweep-toggle::after{content:'';position:absolute;width:12px;height:12px;background:var(--text-dim);border-radius:50%;top:3px;left:3px;transition:all 0.2s;}
+  .sweep-toggle.on{background:rgba(26,255,140,0.18);}
+  .sweep-toggle.on::after{left:18px;background:var(--green);box-shadow:0 0 5px var(--green);}
+  .cls2-row .sweep-toggle.on{background:rgba(176,106,255,0.18);}
+  .cls2-row .sweep-toggle.on::after{background:var(--purple);box-shadow:0 0 5px var(--purple);}
+  .gauge-section-divider{display:flex;align-items:center;gap:9px;margin:3px 0;}
+  .gauge-section-divider span{font-family:'Orbitron',monospace;font-size:0.52rem;font-weight:700;letter-spacing:0.15em;white-space:nowrap;padding:3px 9px;border-radius:3px;border:1px solid;}
+  .can-div  span{color:var(--proto-can); border-color:rgba(26,180,255,0.22); background:rgba(26,180,255,0.05);}
+  .cls2-div span{color:var(--proto-cls2);border-color:rgba(176,106,255,0.22);background:rgba(176,106,255,0.05);}
+  .gauge-section-divider hr{flex:1;border:none;border-top:1px solid var(--border);}
+
+  /* WARNING LIGHTS */
+  .warn-panel{background:var(--surface);border:1px solid rgba(176,106,255,0.2);border-radius:8px;padding:14px 16px;}
+  .warn-lights{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px;}
+  .warn-light{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:7px 11px;cursor:pointer;transition:all 0.2s;font-family:'Orbitron',monospace;font-size:0.55rem;font-weight:600;letter-spacing:0.08em;color:var(--text-dim);user-select:none;}
+  .warn-light:hover{border-color:rgba(176,106,255,0.3);}
+  .warn-light.on      {border-color:var(--accent2);color:var(--accent2);background:rgba(255,77,28,0.08);box-shadow:0 0 9px rgba(255,77,28,0.15);}
+  .warn-light.on.amber{border-color:var(--accent); color:var(--accent); background:rgba(232,160,32,0.09);box-shadow:0 0 9px rgba(232,160,32,0.15);}
+  .warn-dot{width:8px;height:8px;border-radius:50%;background:var(--text-dim);transition:all 0.2s;flex-shrink:0;}
+  .warn-light.on      .warn-dot{background:var(--accent2);box-shadow:0 0 6px var(--accent2);}
+  .warn-light.on.amber .warn-dot{background:var(--accent); box-shadow:0 0 6px var(--accent);}
+
+  /* ODOMETER */
+  .odo-bar{background:var(--surface);border:1px solid rgba(176,106,255,0.2);border-radius:8px;padding:13px 16px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+  .odo-display{font-family:'Orbitron',monospace;font-weight:900;font-size:1.5rem;color:var(--purple);text-shadow:0 0 16px rgba(176,106,255,0.5);letter-spacing:0.12em;min-width:150px;}
+  .odo-input{background:var(--surface2);border:1px solid rgba(176,106,255,0.3);color:var(--purple);font-family:'Share Tech Mono',monospace;font-size:0.88rem;padding:5px 9px;border-radius:4px;width:105px;outline:none;}
+  .odo-input:focus{border-color:var(--purple);}
+  .odo-controls{display:flex;gap:7px;align-items:center;flex-wrap:wrap;}
+
+  /* DRIVE CYCLE */
+  .drive-cycle-panel{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;display:none;}
+  .drive-cycle-panel.visible{display:block;}
+  .cycle-steps{display:flex;margin-top:12px;}
+  .cycle-step{flex:1;padding:9px 6px;background:var(--surface2);border:1px solid var(--border);text-align:center;transition:all 0.3s;}
+  .cycle-step:first-child{border-radius:6px 0 0 6px;} .cycle-step:last-child{border-radius:0 6px 6px 0;}
+  .cycle-step.current{background:rgba(26,255,140,0.07);border-color:var(--green);}
+  .cycle-step.done   {background:rgba(232,160,32,0.05);border-color:rgba(232,160,32,0.22);}
+  .step-name{font-family:'Orbitron',monospace;font-size:0.53rem;font-weight:700;letter-spacing:0.09em;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;}
+  .step-vals{font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--text-dim);line-height:1.6;}
+  .cycle-step.current .step-name{color:var(--green);} .cycle-step.current .step-vals{color:var(--text);}
+  .cycle-progress-bar{height:3px;background:var(--border);border-radius:2px;margin-top:11px;overflow:hidden;}
+  .cycle-progress-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--accent));border-radius:2px;transition:width 0.4s;width:0%;}
+
+  /* SERIAL */
+  .serial-preview{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:13px 15px;}
+  .serial-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .serial-out{font-family:'Share Tech Mono',monospace;font-size:0.64rem;line-height:2;background:#060809;border:1px solid var(--border);border-radius:4px;padding:9px 11px;min-height:70px;max-height:105px;overflow-y:auto;}
+  .serial-out::-webkit-scrollbar{width:3px;} .serial-out::-webkit-scrollbar-thumb{background:var(--border);}
+  .so-can{color:var(--green);} .so-cls2{color:var(--purple);} .so-comment{color:var(--text-dim);opacity:0.5;}
+
+  /* SWEEP ANIM */
+  @keyframes sg-can {0%,100%{color:var(--green); text-shadow:0 0 8px rgba(26,255,140,0.4)} 50%{text-shadow:0 0 22px rgba(26,255,140,0.9)}}
+  @keyframes sg-cls2{0%,100%{color:var(--purple);text-shadow:0 0 8px rgba(176,106,255,0.4)}50%{text-shadow:0 0 24px rgba(176,106,255,0.9)}}
+  .vis-sweeping.can-vis  .gauge-val-display{animation:sg-can  0.9s ease-in-out infinite;}
+  .vis-sweeping.cls2-vis .gauge-val-display{animation:sg-cls2 0.9s ease-in-out infinite;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+  .fade-in{animation:fadeIn 0.35s ease forwards;}
+
+  /* ── RETURN TO ZERO TEST ── */
+  .rtz-panel{background:var(--surface);border:1px solid rgba(255,77,28,0.25);border-radius:8px;padding:16px 18px;}
+  .rtz-desc{font-family:'Share Tech Mono',monospace;font-size:0.68rem;color:var(--text-dim);line-height:1.7;margin-bottom:14px;padding:10px 12px;background:var(--surface2);border-radius:5px;border-left:3px solid var(--accent2);}
+  .rtz-config{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
+  .rtz-config label{font-family:'Orbitron',monospace;font-size:0.56rem;letter-spacing:0.1em;color:var(--text-dim);}
+  .rtz-select{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:0.75rem;padding:5px 9px;border-radius:4px;outline:none;}
+  .rtz-select:focus{border-color:var(--accent2);}
+  .rtz-num{background:var(--surface2);border:1px solid var(--border);color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:0.82rem;padding:5px 8px;border-radius:4px;width:60px;text-align:center;outline:none;}
+  .rtz-num:focus{border-color:var(--accent);}
+  .rtz-gauge-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+  .rtz-gauge-card{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px 10px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;transition:all 0.3s;}
+  .rtz-gauge-card.rtz-testing{border-color:var(--accent);box-shadow:0 0 12px rgba(232,160,32,0.2);animation:rtz-pulse 0.6s ease-in-out infinite alternate;}
+  .rtz-gauge-card.rtz-pass{border-color:var(--green);background:rgba(26,255,140,0.05);}
+  .rtz-gauge-card.rtz-fail{border-color:var(--accent2);background:rgba(255,77,28,0.06);}
+  .rtz-gauge-card.rtz-skip{opacity:0.35;}
+  @keyframes rtz-pulse{0%{box-shadow:0 0 6px rgba(232,160,32,0.2)}100%{box-shadow:0 0 18px rgba(232,160,32,0.5)}}
+  .rtz-g-name{font-family:'Orbitron',monospace;font-size:0.56rem;font-weight:700;letter-spacing:0.1em;color:var(--text-mid);}
+  .rtz-g-status{font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);display:flex;align-items:center;gap:5px;}
+  .rtz-status-dot{width:7px;height:7px;border-radius:50%;background:var(--text-dim);flex-shrink:0;}
+  .rtz-gauge-card.rtz-testing .rtz-status-dot{background:var(--accent);box-shadow:0 0 6px var(--accent);}
+  .rtz-gauge-card.rtz-pass    .rtz-status-dot{background:var(--green); box-shadow:0 0 6px var(--green);}
+  .rtz-gauge-card.rtz-fail    .rtz-status-dot{background:var(--accent2);box-shadow:0 0 6px var(--accent2);}
+  .rtz-g-val{font-family:'Orbitron',monospace;font-size:0.9rem;font-weight:700;color:var(--text-dim);letter-spacing:0.06em;}
+  .rtz-gauge-card.rtz-testing .rtz-g-val{color:var(--accent);}
+  .rtz-gauge-card.rtz-pass    .rtz-g-val{color:var(--green);}
+  .rtz-gauge-card.rtz-fail    .rtz-g-val{color:var(--accent2);}
+  .rtz-phase-bar{display:flex;gap:0;margin-bottom:14px;border-radius:5px;overflow:hidden;border:1px solid var(--border);}
+  .rtz-phase{flex:1;padding:7px 4px;text-align:center;font-family:'Orbitron',monospace;font-size:0.5rem;font-weight:700;letter-spacing:0.09em;color:var(--text-dim);background:var(--surface2);transition:all 0.3s;border-right:1px solid var(--border);}
+  .rtz-phase:last-child{border-right:none;}
+  .rtz-phase.rtz-ph-active{background:rgba(232,160,32,0.1);color:var(--accent);}
+  .rtz-phase.rtz-ph-done{background:rgba(26,255,140,0.07);color:var(--green);}
+  .rtz-result-bar{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface2);border-radius:6px;border:1px solid var(--border);min-height:38px;}
+  .rtz-result-label{font-family:'Orbitron',monospace;font-size:0.58rem;font-weight:700;letter-spacing:0.12em;color:var(--text-dim);}
+  .rtz-result-val{font-family:'Share Tech Mono',monospace;font-size:0.78rem;}
+  .rtz-result-pass{color:var(--green);}
+  .rtz-result-fail{color:var(--accent2);}
+  .rtz-result-run {color:var(--accent);}
+  .rtz-tolerance-note{font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--text-dim);margin-left:auto;}
+  canvas.rtz-mini{width:60px;height:36px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><div class="logo-icon">◎</div>CLUSTERTEST PRO</div>
+  <div id="protoBadge" class="proto-badge can"><div class="proto-dot"></div><span id="protoLabel">CAN BUS</span></div>
+  <div class="port-row">
+    <input class="port-input" id="portInput" type="text" value="COM3" placeholder="COM / /dev/tty">
+    <select class="port-input" id="baudSelect"><option>115200</option><option>57600</option><option>9600</option></select>
+    <button class="btn primary" id="connectBtn" onclick="toggleConnect()">CONNECT</button>
+  </div>
+  <div class="conn-status">
+    <div class="conn-dot" id="connDot"></div>
+    <span id="connLabel">DISCONNECTED</span>
+  </div>
+</header>
+
+<div class="main">
+<div class="sidebar">
+
+  <div>
+    <div class="sb-title">Protocol</div>
+    <div class="proto-switch">
+      <button class="proto-btn can-active" id="pb-can" onclick="setProtocol('CAN')">
+        <span class="pb-title">CAN</span>
+        <span class="pb-sub">ISO 11898</span>
+        <span class="pb-sub">125k–500k bps</span>
+      </button>
+      <button class="proto-btn" id="pb-cls2" onclick="setProtocol('CLASS2')">
+        <span class="pb-title">CLASS 2</span>
+        <span class="pb-sub">SAE J1850 VPW</span>
+        <span class="pb-sub">10.4 kbps · 1-wire</span>
+      </button>
+    </div>
+  </div>
+
+  <div>
+    <div class="sb-title">Vehicle Profile</div>
+    <div class="vehicle-grid" id="vehicleGrid">
+      <button class="vehicle-btn selected" onclick="selectVehicle(this,'GM_CAN')"    data-make="GM_CAN">   <span>GM</span>     <span class="vmake">HS-CAN 500k</span></button>
+      <button class="vehicle-btn"          onclick="selectVehicle(this,'FORD')"      data-make="FORD">     <span>FORD</span>   <span class="vmake">MS-CAN 125k</span></button>
+      <button class="vehicle-btn"          onclick="selectVehicle(this,'CHRYSLER')"  data-make="CHRYSLER"> <span>FCA</span>    <span class="vmake">CAN-C 500k</span></button>
+      <button class="vehicle-btn"          onclick="selectVehicle(this,'IMPORT')"    data-make="IMPORT">   <span>IMPORT</span> <span class="vmake">ISO-TP 500k</span></button>
+      <button class="vehicle-btn cls2-only" onclick="selectVehicle(this,'GM_CLASS2')" data-make="GM_CLASS2" style="grid-column:1/-1">
+        <span>GM CLASS 2</span><span class="vmake">J1850 VPW · 10.4k · Single-wire</span>
+      </button>
+    </div>
+  </div>
+
+  <div>
+    <div class="sb-title" id="infoBoxTitle">CAN Profile</div>
+    <div class="proto-info-box can-theme" id="protoInfoBox">
+      <div><span class="key">MAKE  : </span><span class="val" id="ci-make">GM / Chevrolet</span></div>
+      <div><span class="key">SPEED : </span><span class="val" id="ci-speed">500 kbps</span></div>
+      <div><span class="key">SPD   : </span><span class="val" id="ci-spd">0x3E9</span></div>
+      <div><span class="key">RPM   : </span><span class="val" id="ci-rpm">0x107</span></div>
+      <div><span class="key">FUEL  : </span><span class="val" id="ci-fuel">0x349</span></div>
+      <div><span class="key">TEMP  : </span><span class="val" id="ci-temp">0x318</span></div>
+      <div><span class="key">OIL   : </span><span class="val" id="ci-oil">0x3B0</span></div>
+      <div id="ci-odo-row" style="display:none"><span class="key">ODO   : </span><span class="val" id="ci-odo">$A6</span></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="sb-title">Operation Mode</div>
+    <div class="mode-btns">
+      <button class="mode-btn active" id="mode-sweep" onclick="setMode('sweep')"><span>↔</span> AUTO SWEEP</button>
+      <button class="mode-btn" id="mode-hold"  onclick="setMode('hold')"><span>◉</span> MANUAL HOLD</button>
+      <button class="mode-btn" id="mode-drive" onclick="setMode('drive')"><span>▶</span> DRIVE CYCLE</button>
+    </div>
+  </div>
+
+  <div>
+    <div class="sb-title">Status Log</div>
+    <div class="log-box" id="logBox"></div>
+  </div>
+
+</div><!-- /sidebar -->
+
+<div class="content">
+
+  <!-- TAB NAV -->
+  <div class="tab-nav">
+    <button class="tab-btn tab-active" id="tab-gauge" onclick="switchTab('gauge')">⚡ GAUGE SWEEP</button>
+    <button class="tab-btn" id="tab-eeprom" onclick="switchTab('eeprom')">🔬 EEPROM DECODER</button>
+  </div>
+
+  <!-- GAUGE TAB WRAPPER -->
+  <div id="gaugeTabContent" style="display:flex;flex-direction:column;gap:20px">
+
+  <!-- VISUALIZERS -->
+  <div>
+    <div class="controls-header">
+      <span class="section-title">Live Gauge Display</span>
+      <div class="sweep-controls">
+        <span style="font-family:'Orbitron',monospace;font-size:0.53rem;color:var(--text-dim);letter-spacing:0.1em">SPEED:</span>
+        <button class="speed-btn" onclick="setSweepSpeed('slow',this)">SLOW</button>
+        <button class="speed-btn active" onclick="setSweepSpeed('med',this)">MED</button>
+        <button class="speed-btn" onclick="setSweepSpeed('fast',this)">FAST</button>
+        <button class="btn primary" id="masterSweepBtn" onclick="masterSweep()">▶ SWEEP ALL</button>
+        <button class="btn danger" onclick="stopAll()">■ STOP</button>
+      </div>
+    </div>
+    <div class="gauge-vis-row" id="visRow"></div>
+  </div>
+
+  <!-- ODOMETER - Class 2 only -->
+  <div class="odo-bar" id="odoBar" style="display:none">
+    <div>
+      <div style="font-family:'Orbitron',monospace;font-size:0.52rem;letter-spacing:0.13em;color:var(--purple);margin-bottom:5px;">CLASS 2 · ODOMETER &nbsp;<span style="font-family:'Share Tech Mono',monospace;color:var(--text-dim)">PID $A6</span></div>
+      <div class="odo-display" id="odoDisplay">000000</div>
+    </div>
+    <div class="odo-controls">
+      <input class="odo-input" id="odoInput" type="number" min="0" max="999999" value="0" oninput="setOdo(this.value)" placeholder="Miles">
+      <button class="btn" onclick="setOdo(0);document.getElementById('odoInput').value=0">ZERO</button>
+      <button class="btn active-purple" onclick="startOdoRoll()">▶ ROLL ODO</button>
+      <button class="btn" onclick="stopOdoRoll()">■ STOP</button>
+    </div>
+  </div>
+
+  <!-- WARNING LIGHTS - Class 2 only -->
+  <div class="warn-panel" id="warnPanel" style="display:none">
+    <div class="controls-header" style="margin-bottom:0">
+      <span class="section-title" style="color:var(--purple)">Class 2 · Warning Lights &amp; Indicators</span>
+      <div style="display:flex;gap:7px">
+        <button class="btn" onclick="allLightsOn()">ALL ON</button>
+        <button class="btn" onclick="allLightsOff()">ALL OFF</button>
+      </div>
+    </div>
+    <div class="warn-lights" id="warnLights"></div>
+  </div>
+
+  <!-- DRIVE CYCLE -->
+  <div class="drive-cycle-panel" id="driveCyclePanel">
+    <div class="controls-header">
+      <span class="section-title">Drive Cycle Simulator</span>
+      <button class="btn primary" onclick="runDriveCycle()">▶ RUN CYCLE</button>
+    </div>
+    <div class="cycle-steps">
+      <div class="cycle-step" id="cs0"><div class="step-name">Cold Start</div><div class="step-vals">RPM: 1200<br>SPD: 0<br>TMP: 40°</div></div>
+      <div class="cycle-step" id="cs1"><div class="step-name">Idle Warm</div><div class="step-vals">RPM: 800<br>SPD: 0<br>TMP: 80°</div></div>
+      <div class="cycle-step" id="cs2"><div class="step-name">Accel</div><div class="step-vals">RPM: 3500<br>SPD: 45<br>TMP: 90°</div></div>
+      <div class="cycle-step" id="cs3"><div class="step-name">Cruise</div><div class="step-vals">RPM: 2100<br>SPD: 65<br>TMP: 92°</div></div>
+      <div class="cycle-step" id="cs4"><div class="step-name">Decel</div><div class="step-vals">RPM: 1000<br>SPD: 15<br>TMP: 90°</div></div>
+      <div class="cycle-step" id="cs5"><div class="step-name">Stop</div><div class="step-vals">RPM: 0<br>SPD: 0<br>TMP: 88°</div></div>
+    </div>
+    <div class="cycle-progress-bar"><div class="cycle-progress-fill" id="cycleProgress"></div></div>
+  </div>
+
+  <!-- RETURN TO ZERO TEST -->
+  <div class="rtz-panel">
+    <div class="controls-header" style="margin-bottom:10px">
+      <span class="section-title" style="color:var(--accent2)">↩ Return-to-Zero Test</span>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center">
+        <div class="rtz-config" style="margin-bottom:0">
+          <label>PEAK HOLD</label>
+          <input class="rtz-num" id="rtzHoldSec" type="number" min="1" max="10" value="3"> <label>sec</label>
+          <label style="margin-left:8px">TOLERANCE</label>
+          <input class="rtz-num" id="rtzTolerance" type="number" min="0" max="10" value="2"> <label>units</label>
+          <label style="margin-left:8px">RAMP</label>
+          <select class="rtz-select" id="rtzRamp"><option value="slow">SLOW</option><option value="med" selected>MED</option><option value="fast">FAST</option></select>
+        </div>
+        <button class="btn primary" id="rtzRunBtn" onclick="runRTZ()">▶ RUN RTZ TEST</button>
+        <button class="btn danger" onclick="cancelRTZ()">■ CANCEL</button>
+        <button class="btn" onclick="resetRTZ()">RESET</button>
+      </div>
+    </div>
+
+    <div class="rtz-desc">
+      Each gauge ramps to its <b style="color:var(--accent)">maximum value</b>, holds for the set duration, then signals are cut to zero.
+      The tool measures the resting value after <b style="color:var(--accent)">2 seconds</b> and flags any needle that does not return
+      within tolerance. <b style="color:var(--accent2)">Stick · overshoot · creep</b> all result in FAIL.
+    </div>
+
+    <div class="rtz-phase-bar">
+      <div class="rtz-phase" id="rtzph0">IDLE</div>
+      <div class="rtz-phase" id="rtzph1">RAMP UP</div>
+      <div class="rtz-phase" id="rtzph2">PEAK HOLD</div>
+      <div class="rtz-phase" id="rtzph3">ZERO SIGNAL</div>
+      <div class="rtz-phase" id="rtzph4">MEASURING</div>
+      <div class="rtz-phase" id="rtzph5">COMPLETE</div>
+    </div>
+
+    <div class="rtz-gauge-grid" id="rtzGaugeGrid"></div>
+
+    <div class="rtz-result-bar">
+      <span class="rtz-result-label">RESULT:</span>
+      <span class="rtz-result-val" id="rtzResultVal" style="color:var(--text-dim)">— NOT RUN —</span>
+      <span class="rtz-tolerance-note" id="rtzToleranceNote">Tolerance: ±2 units from zero</span>
+    </div>
+  </div>
+
+  <!-- GAUGE CONTROLS -->
+  <div>
+    <div class="controls-header">
+      <span class="section-title">Gauge Controls</span>
+      <div style="display:flex;gap:7px">
+        <button class="btn" onclick="setAllMax()">ALL MAX</button>
+        <button class="btn" onclick="setAllZero()">ALL ZERO</button>
+      </div>
+    </div>
+    <div class="gauge-rows" id="gaugeRows"></div>
+  </div>
+
+  <!-- SERIAL PREVIEW -->
+  <div class="serial-preview">
+    <div class="serial-header">
+      <span class="section-title">Serial Output Preview</span>
+      <button class="btn" onclick="clearSerial()">CLEAR</button>
+    </div>
+    <div class="serial-out" id="serialOut">
+      <span class="so-comment">// Waiting for connection...</span><br>
+      <span class="so-comment">// CAN frames shown in green · Class 2 VPW frames shown in purple</span>
+    </div>
+  </div>
+
+  </div><!-- /gaugeTabContent -->
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- EEPROM DECODER TAB                              -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <div id="eepromTabContent" style="display:none">
+
+    <div class="ee-layout">
+
+      <!-- LEFT: Input + Controls -->
+      <div class="ee-left">
+
+        <!-- Cluster selector -->
+        <div class="ee-card">
+          <div class="ee-card-title">Cluster Profile</div>
+          <div class="ee-cluster-grid">
+            <button class="ee-cl-btn ee-cl-active" onclick="eeSelectCluster('gm_delco',this)">
+              <span class="ee-cl-make">GM</span>
+              <span class="ee-cl-sub">Delco / Delphi</span>
+              <span class="ee-cl-chip">AT25020 · 25xx</span>
+            </button>
+            <button class="ee-cl-btn" onclick="eeSelectCluster('ford_visteon',this)">
+              <span class="ee-cl-make">FORD</span>
+              <span class="ee-cl-sub">Visteon</span>
+              <span class="ee-cl-chip">24C16 · 24xx</span>
+            </button>
+            <button class="ee-cl-btn" onclick="eeSelectCluster('chrysler',this)">
+              <span class="ee-cl-make">FCA</span>
+              <span class="ee-cl-sub">Chrysler / Dodge / Jeep</span>
+              <span class="ee-cl-chip">93C56 · 93xx</span>
+            </button>
+            <button class="ee-cl-btn" onclick="eeSelectCluster('toyota',this)">
+              <span class="ee-cl-make">TOYOTA</span>
+              <span class="ee-cl-sub">Denso / Yazaki</span>
+              <span class="ee-cl-chip">93C46 / 93C56</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Hex dump input -->
+        <div class="ee-card">
+          <div class="ee-card-title">Raw EEPROM Hex Dump
+            <span class="ee-chip-label" id="eeChipLabel">AT25020A — 256 bytes</span>
+          </div>
+          <textarea class="ee-hex-input" id="eeHexInput" spellcheck="false"
+            placeholder="Paste hex dump here...&#10;&#10;Accepted formats:&#10;  00 1A FF 3C 00 ...  (space separated)&#10;  001AFF3C00...       (continuous)&#10;  00 1A FF 3C         (partial — partial decode)"></textarea>
+          <div class="ee-btn-row">
+            <button class="btn primary" onclick="eeDecode()">▶ DECODE</button>
+            <button class="btn" onclick="eeLoadSample()">LOAD SAMPLE</button>
+            <button class="btn danger" onclick="eeClear()">CLEAR</button>
+          </div>
+        </div>
+
+        <!-- Mileage / Hours / Segment encoder -->
+        <div class="ee-card">
+          <div class="ee-card-title">Value Encoder — Decimal → Write Bytes
+            <span class="ee-chip-label" id="eeEncProfileLabel">GM Delco</span>
+          </div>
+
+          <!-- Row 1: Odometer + unit -->
+          <div class="ee-field-grid">
+            <div class="ee-enc-group" style="grid-column:1/3">
+              <label class="ee-label">🔢 Total Odometer (Season Miles)</label>
+              <div style="display:flex;gap:7px;align-items:center">
+                <input class="ee-num-input" id="eeMileageInput" type="number" min="0" max="999999" placeholder="e.g. 87432" oninput="eeEncode()" style="flex:1">
+                <select class="ee-select" id="eeMileageUnit" onchange="eeEncode()">
+                  <option value="miles">Miles</option>
+                  <option value="km">Kilometers</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Row 2: Business + Personal mileage -->
+            <div class="ee-enc-group">
+              <label class="ee-label">💼 Business Mileage (Trip A)</label>
+              <div style="display:flex;gap:5px;align-items:center">
+                <input class="ee-num-input" id="eeTripAInput" type="number" min="0" max="99999" placeholder="e.g. 12500" oninput="eeEncode()" style="flex:1">
+                <span class="ee-unit-tag" id="eeTripAUnit">mi</span>
+              </div>
+            </div>
+            <div class="ee-enc-group">
+              <label class="ee-label">🏠 Personal Mileage (Trip B)</label>
+              <div style="display:flex;gap:5px;align-items:center">
+                <input class="ee-num-input" id="eeTripBInput" type="number" min="0" max="99999" placeholder="e.g. 5200" oninput="eeEncode()" style="flex:1">
+                <span class="ee-unit-tag" id="eeTripBUnit">mi</span>
+              </div>
+            </div>
+
+            <!-- Row 3: Engine hours + Idle hours -->
+            <div class="ee-enc-group">
+              <label class="ee-label">⏱ Engine Hours (Total)</label>
+              <div style="display:flex;gap:5px;align-items:center">
+                <input class="ee-num-input" id="eeHoursInput" type="number" min="0" max="99999" step="0.1" placeholder="e.g. 1840.5" oninput="eeEncode()" style="flex:1">
+                <span class="ee-unit-tag">hrs</span>
+              </div>
+            </div>
+            <div class="ee-enc-group">
+              <label class="ee-label">🅿️ Idle Hours</label>
+              <div style="display:flex;gap:5px;align-items:center">
+                <input class="ee-num-input" id="eeIdleHoursInput" type="number" min="0" max="99999" step="0.1" placeholder="e.g. 420.0" oninput="eeEncode()" style="flex:1">
+                <span class="ee-unit-tag">hrs</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Copy-ready output table -->
+          <div class="ee-encode-result" id="eeEncodeResult">
+            <div class="ee-enc-placeholder">Fill in any value above — hex bytes appear here ready to write to EEPROM</div>
+          </div>
+
+          <!-- Quick copy buttons -->
+          <div class="ee-btn-row" id="eeCopyBtns" style="display:none">
+            <button class="btn" onclick="eeCopyField('odo')"    id="eeCpOdo">📋 Copy ODO</button>
+            <button class="btn" onclick="eeCopyField('tripA')"  id="eeCpTripA">📋 Copy Trip A</button>
+            <button class="btn" onclick="eeCopyField('tripB')"  id="eeCpTripB">📋 Copy Trip B</button>
+            <button class="btn" onclick="eeCopyField('hours')"  id="eeCpHours">📋 Copy Hours</button>
+            <button class="btn danger" onclick="eeClearEncoder()">CLEAR</button>
+          </div>
+
+          <!-- Conversion helper -->
+          <div class="ee-conv-bar" id="eeConvBar" style="display:none">
+            <span class="ee-conv-item" id="eeConvMi"></span>
+            <span class="ee-conv-sep">·</span>
+            <span class="ee-conv-item" id="eeConvKm"></span>
+            <span class="ee-conv-sep">·</span>
+            <span class="ee-conv-item" id="eeConvTenths"></span>
+          </div>
+        </div>
+
+        <!-- Checksum calculator -->
+        <div class="ee-card">
+          <div class="ee-card-title">Checksum / CRC Calculator</div>
+          <div class="ee-enc-row">
+            <div class="ee-enc-group" style="flex:1">
+              <label class="ee-label">Hex bytes to checksum</label>
+              <input class="ee-num-input" id="eeCsumInput" type="text" placeholder="e.g. 00 1A FF 3C 00 BC" style="font-family:'Share Tech Mono',monospace">
+            </div>
+            <div class="ee-enc-group">
+              <label class="ee-label">Algorithm</label>
+              <select class="ee-select" id="eeCsumAlgo">
+                <option value="xor">XOR (all bytes)</option>
+                <option value="sum8">SUM8 (add mod 256)</option>
+                <option value="sum16">SUM16 (add mod 65536)</option>
+                <option value="crc8">CRC-8 (poly 0x31)</option>
+                <option value="inv_xor">INV XOR (XOR then NOT)</option>
+                <option value="twos">Two's Complement</option>
+              </select>
+            </div>
+            <div class="ee-enc-group">
+              <label class="ee-label">&nbsp;</label>
+              <button class="btn primary" onclick="eeCalcChecksum()" style="margin-top:0">CALC</button>
+            </div>
+          </div>
+          <div class="ee-csum-result" id="eeCsumResult"></div>
+        </div>
+
+      </div><!-- /ee-left -->
+
+      <!-- RIGHT: Decoded output + byte map -->
+      <div class="ee-right">
+
+        <!-- Decode results -->
+        <div class="ee-card" id="eeResultCard">
+          <div class="ee-card-title">Decoded Values
+            <span class="ee-badge" id="eeStatusBadge">AWAITING DUMP</span>
+          </div>
+          <div id="eeResultGrid" class="ee-result-grid">
+            <div class="ee-result-placeholder">
+              <div style="font-size:2rem;margin-bottom:10px">🔬</div>
+              <div>Paste a hex dump and click DECODE</div>
+              <div style="margin-top:6px;font-size:0.68rem;color:var(--text-dim)">Supports GM Delco, Ford Visteon, Chrysler 93C56, Toyota 93C46/93C56</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Byte map -->
+        <div class="ee-card">
+          <div class="ee-card-title">Byte Map
+            <span style="font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--text-dim);margin-left:8px" id="eeByteCount"></span>
+          </div>
+          <div class="ee-byte-map-wrap">
+            <div class="ee-byte-map" id="eeByteMap">
+              <div class="ee-bm-placeholder">Byte map renders after decode</div>
+            </div>
+          </div>
+          <div class="ee-legend" id="eeLegend"></div>
+        </div>
+
+        <!-- Known byte reference -->
+        <div class="ee-card">
+          <div class="ee-card-title">Known Byte Reference — <span id="eeRefLabel">GM Delco (03–07 GMT800)</span></div>
+          <div class="ee-ref-table" id="eeRefTable"></div>
+        </div>
+
+      </div><!-- /ee-right -->
+    </div><!-- /ee-layout -->
+  </div><!-- /eepromTabContent -->
+
+</div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// ═══════════════════════════════════
+// DATA
+// ═══════════════════════════════════
+const VEHICLES={
+  GM_CAN:   {label:'GM / Chevrolet (CAN)',      speed:'500 kbps',  proto:'CAN',    ids:{spd:'0x3E9',rpm:'0x107',fuel:'0x349',temp:'0x318',oil:'0x3B0',odo:'N/A'}},
+  FORD:     {label:'Ford / Lincoln',             speed:'125 kbps',  proto:'CAN',    ids:{spd:'0x4B0',rpm:'0x204',fuel:'0x3B3',temp:'0x420',oil:'0x3C0',odo:'N/A'}},
+  CHRYSLER: {label:'Chrysler / Dodge / Jeep',    speed:'500 kbps',  proto:'CAN',    ids:{spd:'0x1F0',rpm:'0x208',fuel:'0x294',temp:'0x2A0',oil:'0x2B0',odo:'N/A'}},
+  IMPORT:   {label:'Toyota / Honda / Import',    speed:'500 kbps',  proto:'CAN',    ids:{spd:'0x3D0',rpm:'0x1C4',fuel:'0x3A0',temp:'0x3A1',oil:'0x3A2',odo:'N/A'}},
+  GM_CLASS2:{label:'GM Class 2 (J1850 VPW)',     speed:'10.4 kbps', proto:'CLASS2', ids:{spd:'$0D',  rpm:'$0C',  fuel:'$2F', temp:'$05', oil:'$0B',  odo:'$A6'}},
+};
+
+const CAN_GAUGES=[
+  {id:'spd', label:'SPEED',   unit:'MPH',min:0,  max:160, default:0,   canId:'0x3E9',scale:1.609,proto:'CAN'},
+  {id:'rpm', label:'TACH',    unit:'RPM',min:0,  max:8000,default:0,   canId:'0x107',scale:4,    proto:'CAN'},
+  {id:'fuel',label:'FUEL',    unit:'%',  min:0,  max:100, default:75,  canId:'0x349',scale:2.55, proto:'CAN'},
+  {id:'temp',label:'COOLANT', unit:'°F', min:100,max:260, default:200, canId:'0x318',scale:1,    proto:'CAN'},
+  {id:'oil', label:'OIL PSI', unit:'PSI',min:0,  max:80,  default:40,  canId:'0x3B0',scale:3.19, proto:'CAN'},
+  {id:'volt',label:'VOLTAGE', unit:'V',  min:9,  max:16,  default:14.2,canId:'0x3C0',scale:16,   proto:'CAN',step:0.1},
+  {id:'batt',label:'BATTERY', unit:'%',  min:0,  max:100, default:80,  canId:'0x3C1',scale:2.55, proto:'CAN'},
+  {id:'boost',label:'BOOST',  unit:'PSI',min:-15,max:25,  default:0,   canId:'0x3D5',scale:4,    proto:'CAN'},
+];
+
+const CLASS2_GAUGES=[
+  {id:'c2_spd', label:'VSS / SPEED',  unit:'MPH',min:0,  max:160, default:0,   pid:'$0D',scale:1,    proto:'CLASS2',note:'RAW = MPH'},
+  {id:'c2_rpm', label:'RPM / TACH',   unit:'RPM',min:0,  max:6500,default:0,   pid:'$0C',scale:0.25, proto:'CLASS2',note:'2-byte: RPM/4'},
+  {id:'c2_fuel',label:'FUEL LEVEL',   unit:'%',  min:0,  max:100, default:75,  pid:'$2F',scale:2.55, proto:'CLASS2',note:'% × 2.55'},
+  {id:'c2_temp',label:'COOLANT TEMP', unit:'°F', min:100,max:250, default:198, pid:'$05',scale:1,    proto:'CLASS2',note:'RAW-40=°C'},
+  {id:'c2_oil', label:'OIL PRESSURE', unit:'PSI',min:0,  max:80,  default:40,  pid:'$0B',scale:0.145,proto:'CLASS2',note:'kPa ÷ 6.895'},
+];
+
+const WARN_LIGHTS=[
+  {id:'cel',    label:'CHECK ENGINE', pid:'$01 b6', amber:true},
+  {id:'svc',    label:'SERVICE',      pid:'$01 b5', amber:true},
+  {id:'abs',    label:'ABS',          pid:'$4D',    amber:false},
+  {id:'airbag', label:'AIRBAG / SRS', pid:'$4E',    amber:false},
+  {id:'bat',    label:'BATTERY',      pid:'$42 b7', amber:false},
+  {id:'oil_w',  label:'OIL WARN',     pid:'$0B flg',amber:false},
+  {id:'temp_w', label:'TEMP WARN',    pid:'$05 flg',amber:false},
+  {id:'trans',  label:'TRANS TEMP',   pid:'$8A',    amber:true},
+  {id:'tpms',   label:'TPMS',         pid:'$C4',    amber:true},
+  {id:'seatblt',label:'SEAT BELT',    pid:'$50 b3', amber:false},
+];
+
+// ═══════════════════════════════════
+// STATE
+// ═══════════════════════════════════
+const state={
+  connected:false, mode:'sweep', vehicle:'GM_CAN', protocol:'CAN',
+  values:{}, sweeping:{}, sweepDir:{}, sweepSpeed:'med',
+  cycleRunning:false, lights:{}, odoValue:0, odoRolling:false, odoInterval:null,
+};
+[...CAN_GAUGES,...CLASS2_GAUGES].forEach(g=>{state.values[g.id]=g.default;state.sweeping[g.id]=false;state.sweepDir[g.id]=1;});
+WARN_LIGHTS.forEach(w=>state.lights[w.id]=false);
+const SPEEDS={slow:0.28,med:1.0,fast:3.2};
+function activeGauges(){return state.protocol==='CLASS2'?CLASS2_GAUGES:CAN_GAUGES;}
+
+// ═══════════════════════════════════
+// INIT
+// ═══════════════════════════════════
+window.onload=()=>{
+  buildGaugeRows(); buildVisRow(); buildWarnLights(); buildRTZGrid();
+  updateProtoInfo('GM_CAN'); startRenderLoop();
+  log('System initialized.','info');
+  log('Select protocol + vehicle, then connect to Arduino.','info');
+};
+
+// ═══════════════════════════════════
+// PROTOCOL SWITCH
+// ═══════════════════════════════════
+function setProtocol(proto){
+  state.protocol=proto; stopAll();
+  const badge=document.getElementById('protoBadge');
+  badge.className='proto-badge '+(proto==='CAN'?'can':'cls2');
+  document.getElementById('protoLabel').textContent=proto==='CAN'?'CAN BUS':'CLASS 2 · J1850 VPW';
+  document.getElementById('pb-can').className ='proto-btn'+(proto==='CAN'   ?' can-active':'');
+  document.getElementById('pb-cls2').className='proto-btn'+(proto==='CLASS2'?' cls2-active':'');
+  if(proto==='CLASS2') selectVehicleByMake('GM_CLASS2');
+  else selectVehicleByMake('GM_CAN');
+  document.getElementById('odoBar').style.display  =proto==='CLASS2'?'flex':'none';
+  document.getElementById('warnPanel').style.display=proto==='CLASS2'?'block':'none';
+  buildGaugeRows(); buildVisRow(); buildRTZGrid();
+  log('Protocol: '+(proto==='CAN'?'CAN Bus ISO 11898':'Class 2 / J1850 VPW @ 10.4 kbps'),proto==='CLASS2'?'cls2':'info');
+}
+function selectVehicleByMake(make){
+  document.querySelectorAll('.vehicle-btn').forEach(b=>b.classList.toggle('selected',b.dataset.make===make));
+  state.vehicle=make; updateProtoInfo(make);
+}
+
+// ═══════════════════════════════════
+// BUILD GAUGE ROWS
+// ═══════════════════════════════════
+function buildGaugeRows(){
+  const c=document.getElementById('gaugeRows'); c.innerHTML='';
+  const isCls2=state.protocol==='CLASS2';
+  const div=document.createElement('div');
+  div.className='gauge-section-divider '+(isCls2?'cls2-div':'can-div');
+  div.innerHTML='<span>'+(isCls2?'CLASS 2 · J1850 VPW GAUGES':'CAN BUS GAUGES')+'</span><hr>';
+  c.appendChild(div);
+  activeGauges().forEach(g=>c.appendChild(makeRow(g)));
+}
+function makeRow(g){
+  const isCls2=g.proto==='CLASS2';
+  const pid=isCls2?g.pid:g.canId;
+  const pct=((state.values[g.id]-g.min)/(g.max-g.min))*100;
+  const row=document.createElement('div');
+  row.className='gauge-row'+(isCls2?' cls2-row':'');
+  row.id='row-'+g.id;
+  row.innerHTML=`
+    <div class="gauge-name">${g.label}<span class="g-unit">${g.unit} · ${g.min}–${g.max}</span><span class="g-pid">${pid}</span></div>
+    <div class="slider-wrap">
+      <div class="slider-fill" id="fill-${g.id}" style="width:${pct}%"></div>
+      <input type="range" min="${g.min}" max="${g.max}" step="${g.step||1}" value="${state.values[g.id]}" id="slider-${g.id}" oninput="onSlider('${g.id}',this.value)">
+    </div>
+    <input class="gauge-num-input" id="num-${g.id}" type="number" min="${g.min}" max="${g.max}" step="${g.step||1}" value="${fmtV(g)}" oninput="onNumInput('${g.id}',this.value)">
+    <button class="sweep-toggle" id="tog-${g.id}" onclick="toggleSweep('${g.id}')"></button>`;
+  return row;
+}
+function fmtV(g){return g.step&&g.step<1?state.values[g.id].toFixed(1):Math.round(state.values[g.id]);}
+
+// ═══════════════════════════════════
+// BUILD VIS ROW
+// ═══════════════════════════════════
+function buildVisRow(){
+  const c=document.getElementById('visRow'); c.innerHTML='';
+  activeGauges().slice(0,4).forEach(g=>{
+    const isCls2=g.proto==='CLASS2';
+    const div=document.createElement('div');
+    div.className='gauge-vis fade-in '+(isCls2?'cls2-vis':'can-vis');
+    div.id='vis-'+g.id;
+    div.innerHTML=`
+      <div class="proto-pip ${isCls2?'cls2-pip':'can-pip'}">${isCls2?'CLASS2':'CAN'}</div>
+      <div class="gauge-label">${g.label}</div>
+      <canvas class="arc-gauge" id="canvas-${g.id}" width="196" height="120"></canvas>
+      <div class="gauge-val-display" id="vd-${g.id}">${fmtV(g)}</div>
+      <div class="gauge-unit-lbl">${g.unit}</div>`;
+    c.appendChild(div);
+  });
+}
+
+// ═══════════════════════════════════
+// WARNING LIGHTS
+// ═══════════════════════════════════
+function buildWarnLights(){
+  const c=document.getElementById('warnLights'); c.innerHTML='';
+  WARN_LIGHTS.forEach(w=>{
+    const el=document.createElement('div');
+    el.className='warn-light'+(w.amber?' amber':'');
+    el.id='warn-'+w.id;
+    el.onclick=()=>toggleLight(w.id,w.amber);
+    el.innerHTML=`<div class="warn-dot" id="wd-${w.id}"></div>${w.label}<span style="font-family:'Share Tech Mono',monospace;font-size:0.46rem;opacity:0.45;margin-left:4px">${w.pid}</span>`;
+    c.appendChild(el);
+  });
+}
+function toggleLight(id,amber){
+  state.lights[id]=!state.lights[id];
+  const el=document.getElementById('warn-'+id);
+  el.classList.toggle('on',state.lights[id]);
+  if(amber) el.classList.add('amber');
+  log(`Light ${id.toUpperCase()}: ${state.lights[id]?'ON':'OFF'}`,state.lights[id]?'warn':'info');
+}
+function allLightsOn() {WARN_LIGHTS.forEach(w=>{state.lights[w.id]=true; document.getElementById('warn-'+w.id).classList.add('on');});log('All lights ON','warn');}
+function allLightsOff(){WARN_LIGHTS.forEach(w=>{state.lights[w.id]=false;const el=document.getElementById('warn-'+w.id);el.classList.remove('on');});log('All lights OFF','info');}
+
+// ═══════════════════════════════════
+// ODOMETER
+// ═══════════════════════════════════
+function setOdo(val){state.odoValue=Math.max(0,Math.min(999999,parseInt(val)||0));document.getElementById('odoDisplay').textContent=String(state.odoValue).padStart(6,'0');}
+function startOdoRoll(){if(state.odoRolling)return;state.odoRolling=true;state.odoInterval=setInterval(()=>{state.odoValue=Math.min(999999,state.odoValue+1);document.getElementById('odoInput').value=state.odoValue;document.getElementById('odoDisplay').textContent=String(state.odoValue).padStart(6,'0');},200);log('Odometer rolling...','cls2');}
+function stopOdoRoll(){state.odoRolling=false;clearInterval(state.odoInterval);log('Odometer stopped.','info');}
+
+// ═══════════════════════════════════
+// ARC DRAW
+// ═══════════════════════════════════
+function drawArc(g){
+  const canvas=document.getElementById('canvas-'+g.id);if(!canvas)return;
+  const ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const cx=W/2,cy=H*0.88,r=H*0.78;
+  const pct=Math.max(0,Math.min(1,(state.values[g.id]-g.min)/(g.max-g.min)));
+  const isCls2=g.proto==='CLASS2',isSweep=state.sweeping[g.id];
+  ctx.beginPath();ctx.arc(cx,cy,r,Math.PI,2*Math.PI);ctx.strokeStyle='#1a2030';ctx.lineWidth=9;ctx.lineCap='round';ctx.stroke();
+  if(pct>0){
+    const fillEnd=Math.PI+pct*Math.PI;
+    const grad=ctx.createLinearGradient(cx-r,cy,cx+r,cy);
+    if(isSweep){grad.addColorStop(0,isCls2?'#b06aff':'#1aff8c');grad.addColorStop(1,isCls2?'#6a20ff':'#1ab4ff');}
+    else{grad.addColorStop(0,isCls2?'#9040dd':'#e8a020');grad.addColorStop(1,isCls2?'#b06aff':'#ff6a00');}
+    ctx.beginPath();ctx.arc(cx,cy,r,Math.PI,fillEnd);ctx.strokeStyle=grad;ctx.lineWidth=9;ctx.lineCap='round';ctx.stroke();
+    ctx.beginPath();ctx.arc(cx,cy,r,Math.PI,fillEnd);
+    ctx.strokeStyle=isSweep?(isCls2?'rgba(176,106,255,0.28)':'rgba(26,255,140,0.26)'):(isCls2?'rgba(176,106,255,0.18)':'rgba(232,160,32,0.22)');
+    ctx.lineWidth=15;ctx.stroke();
+    const na=Math.PI+pct*Math.PI,nx=cx+r*Math.cos(na),ny=cy+r*Math.sin(na);
+    const dc=isSweep?(isCls2?'#b06aff':'#1aff8c'):(isCls2?'#9040dd':'#e8a020');
+    ctx.beginPath();ctx.arc(nx,ny,5,0,2*Math.PI);ctx.fillStyle=dc;ctx.shadowColor=dc;ctx.shadowBlur=10;ctx.fill();ctx.shadowBlur=0;
+  }
+}
+
+// ═══════════════════════════════════
+// RENDER LOOP
+// ═══════════════════════════════════
+function startRenderLoop(){
+  (function loop(){
+    tickSweeps();
+    activeGauges().slice(0,4).forEach(g=>drawArc(g));
+    updateSerialPreview();
+    requestAnimationFrame(loop);
+  })();
+}
+function tickSweeps(){
+  const sp=SPEEDS[state.sweepSpeed];
+  activeGauges().forEach(g=>{
+    if(!state.sweeping[g.id])return;
+    const range=g.max-g.min;
+    state.values[g.id]+=state.sweepDir[g.id]*sp*(range/200);
+    if(state.values[g.id]>=g.max){state.values[g.id]=g.max;state.sweepDir[g.id]=-1;}
+    if(state.values[g.id]<=g.min){state.values[g.id]=g.min;state.sweepDir[g.id]=1;}
+    syncUI(g);
+  });
+}
+function syncUI(g){
+  const sl=document.getElementById('slider-'+g.id),nm=document.getElementById('num-'+g.id);
+  const fi=document.getElementById('fill-'+g.id),vd=document.getElementById('vd-'+g.id);
+  const pv=((state.values[g.id]-g.min)/(g.max-g.min))*100;
+  const d=g.step&&g.step<1?state.values[g.id].toFixed(1):Math.round(state.values[g.id]);
+  if(sl)sl.value=state.values[g.id];if(nm)nm.value=d;if(fi)fi.style.width=pv+'%';if(vd)vd.textContent=d;
+}
+
+// ═══════════════════════════════════
+// INTERACTIONS
+// ═══════════════════════════════════
+function onSlider(id,val){const g=[...CAN_GAUGES,...CLASS2_GAUGES].find(x=>x.id===id);state.values[id]=parseFloat(val);syncUI(g);}
+function onNumInput(id,val){const g=[...CAN_GAUGES,...CLASS2_GAUGES].find(x=>x.id===id);state.values[id]=Math.max(g.min,Math.min(g.max,parseFloat(val)||g.min));syncUI(g);}
+
+function toggleSweep(id){
+  state.sweeping[id]=!state.sweeping[id];
+  const tog=document.getElementById('tog-'+id),row=document.getElementById('row-'+id),vis=document.getElementById('vis-'+id);
+  const on=state.sweeping[id];
+  tog.classList.toggle('on',on);row.classList.toggle('sweeping',on);
+  if(vis){vis.classList.toggle('vis-sweeping',on);vis.classList.toggle(on?'active-'+( vis.classList.contains('cls2-vis')?'cls2':'can'):'',true);if(!on){vis.classList.remove('active-cls2','active-can');}}
+  log(`Sweep ${on?'ON':'OFF'}: ${id.toUpperCase()}`,on?'ok':'warn');
+}
+function masterSweep(){
+  const gauges=activeGauges(),anyOn=gauges.some(g=>state.sweeping[g.id]);
+  if(anyOn){stopAll();return;}
+  gauges.forEach(g=>{if(!state.sweeping[g.id])toggleSweep(g.id);});
+  const btn=document.getElementById('masterSweepBtn');
+  btn.textContent='■ STOP ALL';
+  btn.classList.add(state.protocol==='CLASS2'?'active-purple':'active-green');
+  log('All gauges sweeping...','ok');
+}
+function stopAll(){
+  [...CAN_GAUGES,...CLASS2_GAUGES].forEach(g=>{if(state.sweeping[g.id])toggleSweep(g.id);});
+  state.cycleRunning=false;
+  const btn=document.getElementById('masterSweepBtn');
+  btn.textContent='▶ SWEEP ALL';btn.classList.remove('active-green','active-purple');
+  log('All gauges stopped.','warn');
+}
+function setAllMax(){activeGauges().forEach(g=>{state.values[g.id]=g.max;syncUI(g);});log('All MAX','warn');}
+function setAllZero(){activeGauges().forEach(g=>{state.values[g.id]=g.min;syncUI(g);});log('All ZERO','info');}
+
+// ═══════════════════════════════════
+// MODE
+// ═══════════════════════════════════
+function setMode(mode){
+  state.mode=mode;
+  ['sweep','hold','drive'].forEach(m=>document.getElementById('mode-'+m).classList.remove('active'));
+  document.getElementById('mode-'+mode).classList.add('active');
+  document.getElementById('driveCyclePanel').classList.toggle('visible',mode==='drive');
+  log('Mode: '+mode.toUpperCase(),'info');
+}
+
+// ═══════════════════════════════════
+// DRIVE CYCLE
+// ═══════════════════════════════════
+const PHASES=[
+  {name:'Cold Start',dur:4000,vals:{spd:0,rpm:1200,temp:120,fuel:80,c2_spd:0,c2_rpm:1200,c2_temp:122,c2_fuel:80}},
+  {name:'Idle Warm', dur:4000,vals:{spd:0,rpm:800, temp:170,fuel:79,c2_spd:0,c2_rpm:800, c2_temp:168,c2_fuel:79}},
+  {name:'Accel',     dur:5000,vals:{spd:45,rpm:3500,temp:195,fuel:77,c2_spd:45,c2_rpm:3500,c2_temp:196,c2_fuel:77}},
+  {name:'Cruise',    dur:6000,vals:{spd:65,rpm:2100,temp:200,fuel:74,c2_spd:65,c2_rpm:2100,c2_temp:200,c2_fuel:74}},
+  {name:'Decel',     dur:4000,vals:{spd:15,rpm:1000,temp:195,fuel:74,c2_spd:15,c2_rpm:1000,c2_temp:194,c2_fuel:74}},
+  {name:'Stop',      dur:3000,vals:{spd:0, rpm:0,   temp:190,fuel:74,c2_spd:0, c2_rpm:0,   c2_temp:190,c2_fuel:74}},
+];
+function runDriveCycle(){
+  if(state.cycleRunning)return;state.cycleRunning=true;stopAll();log('Drive cycle started.','ok');
+  const total=PHASES.reduce((a,p)=>a+p.dur,0);
+  function doPhase(i){
+    if(i>=PHASES.length||!state.cycleRunning){state.cycleRunning=false;document.querySelectorAll('.cycle-step').forEach(el=>el.classList.remove('current','done'));document.getElementById('cycleProgress').style.width='0%';log('Drive cycle complete.','ok');return;}
+    document.querySelectorAll('.cycle-step').forEach((el,idx)=>{el.classList.toggle('current',idx===i);el.classList.toggle('done',idx<i);});
+    const p=PHASES[i];log(`Phase: ${p.name}`,'info');
+    const sv={};[...CAN_GAUGES,...CLASS2_GAUGES].forEach(g=>sv[g.id]=state.values[g.id]);
+    const t0=performance.now();
+    (function anim(now){
+      const t=Math.min((now-t0)/p.dur,1);
+      Object.entries(p.vals).forEach(([id,target])=>{const g=[...CAN_GAUGES,...CLASS2_GAUGES].find(x=>x.id===id);if(!g)return;state.values[id]=lerp(sv[id],target,ease(t));syncUI(g);});
+      document.getElementById('cycleProgress').style.width=((PHASES.slice(0,i).reduce((a,x)=>a+x.dur,0)+p.dur*t)/total*100)+'%';
+      if(t<1&&state.cycleRunning)requestAnimationFrame(anim);else doPhase(i+1);
+    })(performance.now());
+  }
+  doPhase(0);
+}
+function lerp(a,b,t){return a+(b-a)*t;}
+function ease(t){return t<0.5?2*t*t:-1+(4-2*t)*t;}
+
+// ═══════════════════════════════════
+// VEHICLE SELECT
+// ═══════════════════════════════════
+function selectVehicle(btn,make){
+  document.querySelectorAll('.vehicle-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');state.vehicle=make;
+  const v=VEHICLES[make];
+  if(v.proto!==state.protocol)setProtocol(v.proto);
+  updateProtoInfo(make);
+  log(`Profile: ${v.label}`,'info');
+}
+function updateProtoInfo(make){
+  const v=VEHICLES[make],isCls2=v.proto==='CLASS2';
+  document.getElementById('infoBoxTitle').textContent=isCls2?'Class 2 Profile':'CAN Profile';
+  const box=document.getElementById('protoInfoBox');
+  box.className='proto-info-box '+(isCls2?'cls2-theme':'can-theme');
+  document.getElementById('ci-make').textContent=v.label;
+  document.getElementById('ci-speed').textContent=v.speed;
+  document.getElementById('ci-spd').textContent=v.ids.spd;
+  document.getElementById('ci-rpm').textContent=v.ids.rpm;
+  document.getElementById('ci-fuel').textContent=v.ids.fuel;
+  document.getElementById('ci-temp').textContent=v.ids.temp;
+  document.getElementById('ci-oil').textContent=v.ids.oil;
+  document.getElementById('ci-odo-row').style.display=isCls2?'block':'none';
+  document.getElementById('ci-odo').textContent=v.ids.odo;
+  box.querySelectorAll('.val').forEach(el=>el.className='val'+(isCls2?' purple':''));
+}
+
+// ═══════════════════════════════════
+// SWEEP SPEED
+// ═══════════════════════════════════
+function setSweepSpeed(sp,btn){state.sweepSpeed=sp;document.querySelectorAll('.speed-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+
+// ═══════════════════════════════════
+// CONNECT
+// ═══════════════════════════════════
+function toggleConnect(){
+  state.connected=!state.connected;
+  const dot=document.getElementById('connDot'),lbl=document.getElementById('connLabel'),btn=document.getElementById('connectBtn');
+  if(state.connected){
+    dot.classList.add('connected');
+    lbl.textContent=document.getElementById('portInput').value+' @ '+document.getElementById('baudSelect').value;
+    btn.textContent='DISCONNECT';btn.classList.remove('primary');btn.classList.add('danger');
+    log('Connected: '+document.getElementById('portInput').value,'ok');
+    log('Arduino handshake OK.','ok');
+    if(state.protocol==='CLASS2')log('Class 2 / J1850 VPW @ 10.4 kbps active','cls2');
+  } else {
+    dot.classList.remove('connected');lbl.textContent='DISCONNECTED';
+    btn.textContent='CONNECT';btn.classList.add('primary');btn.classList.remove('danger');
+    log('Disconnected.','warn');
+  }
+}
+
+// ═══════════════════════════════════
+// SERIAL PREVIEW
+// ═══════════════════════════════════
+let lastSU=0;
+function updateSerialPreview(){
+  const now=performance.now();if(now-lastSU<120)return;lastSU=now;
+  const active=activeGauges().filter(g=>state.sweeping[g.id]||(state.mode==='hold'));
+  if(!active.length)return;
+  const lines=[];
+  if(state.protocol==='CAN'){
+    active.slice(0,5).forEach(g=>{
+      const raw=Math.round(Math.max(0,state.values[g.id])*g.scale);
+      const hi=(raw>>8)&0xFF,lo=raw&0xFF;
+      lines.push(`<span class="so-can">CAN_TX ${g.canId} [8] ${lo.toString(16).padStart(2,'0').toUpperCase()} ${hi.toString(16).padStart(2,'0').toUpperCase()} 00 00 00 00 00 00</span>`);
+    });
+  } else {
+    // J1850 VPW frame: HDR[6C 10 F1] MODE[41] PID DATA CHECKSUM
+    active.slice(0,5).forEach(g=>{
+      const raw=Math.round(Math.max(0,state.values[g.id])*g.scale)&0xFF;
+      const pid=parseInt(g.pid.replace('$',''),16);
+      const cs=((0x6C+0x10+0xF1+0x41+pid+raw)&0xFF).toString(16).toUpperCase().padStart(2,'0');
+      lines.push(`<span class="so-cls2">VPW_TX [07] 6C 10 F1 41 ${pid.toString(16).toUpperCase().padStart(2,'0')} ${raw.toString(16).padStart(2,'0').toUpperCase()} ${cs}</span>`);
+    });
+    // Warning light byte
+    const onLights=WARN_LIGHTS.filter(w=>state.lights[w.id]);
+    if(onLights.length){
+      let b=0;onLights.forEach((_,i)=>b|=(1<<i));
+      lines.push(`<span class="so-cls2">VPW_TX [06] 6C 10 F1 41 01 ${b.toString(16).padStart(2,'0').toUpperCase()} XX  <span style="opacity:0.4">; DTC/light flags</span></span>`);
+    }
+    // Odometer
+    if(state.odoRolling||state.odoValue>0){
+      const hi=(state.odoValue>>8)&0xFF,lo=state.odoValue&0xFF;
+      lines.push(`<span class="so-cls2">VPW_TX [08] 6C 10 F1 41 A6 ${hi.toString(16).padStart(2,'0').toUpperCase()} ${lo.toString(16).padStart(2,'0').toUpperCase()} XX  <span style="opacity:0.4">; ODO</span></span>`);
+    }
+  }
+  document.getElementById('serialOut').innerHTML=lines.join('<br>')||'<span class="so-comment">// No active gauges</span>';
+}
+function clearSerial(){document.getElementById('serialOut').innerHTML='<span class="so-comment">// Cleared.</span>';}
+
+// ═══════════════════════════════════
+// RETURN TO ZERO TEST
+// ═══════════════════════════════════
+const rtz = {
+  running: false,
+  cancelled: false,
+  results: {},   // id -> { finalVal, pass, deviation }
+  phase: -1,
+};
+
+// Build the RTZ gauge cards whenever protocol changes
+function buildRTZGrid() {
+  const grid = document.getElementById('rtzGaugeGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  activeGauges().forEach(g => {
+    const card = document.createElement('div');
+    card.className = 'rtz-gauge-card';
+    card.id = 'rtzcard-' + g.id;
+    card.innerHTML = `
+      <div class="rtz-g-name">${g.label}</div>
+      <canvas class="rtz-mini" id="rtz-canvas-${g.id}" width="120" height="72"></canvas>
+      <div class="rtz-g-status"><div class="rtz-status-dot" id="rtz-dot-${g.id}"></div><span id="rtz-status-${g.id}">READY</span></div>
+      <div class="rtz-g-val" id="rtz-val-${g.id}">${g.min}</div>`;
+    grid.appendChild(card);
+  });
+  // Draw initial arcs
+  activeGauges().forEach(g => drawRTZMini(g, 0));
+}
+
+function drawRTZMini(g, pct) {
+  const canvas = document.getElementById('rtz-canvas-' + g.id);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const cx = W/2, cy = H * 0.88, r = H * 0.75;
+  pct = Math.max(0, Math.min(1, pct));
+  // Track
+  ctx.beginPath(); ctx.arc(cx,cy,r,Math.PI,2*Math.PI);
+  ctx.strokeStyle='#1a2030'; ctx.lineWidth=7; ctx.lineCap='round'; ctx.stroke();
+  if (pct > 0) {
+    const card = document.getElementById('rtzcard-' + g.id);
+    const isFail = card && card.classList.contains('rtz-fail');
+    const isPass = card && card.classList.contains('rtz-pass');
+    const col = isFail ? '#ff4d1c' : isPass ? '#1aff8c' : '#e8a020';
+    ctx.beginPath(); ctx.arc(cx,cy,r,Math.PI, Math.PI + pct*Math.PI);
+    ctx.strokeStyle = col; ctx.lineWidth=7; ctx.lineCap='round'; ctx.stroke();
+  }
+}
+
+function setRTZPhase(i) {
+  rtz.phase = i;
+  for (let p = 0; p < 6; p++) {
+    const el = document.getElementById('rtzph' + p);
+    el.className = 'rtz-phase' + (p < i ? ' rtz-ph-done' : p === i ? ' rtz-ph-active' : '');
+  }
+}
+
+function setCardState(g, state, statusText, val) {
+  const card = document.getElementById('rtzcard-' + g.id);
+  const st   = document.getElementById('rtz-status-' + g.id);
+  const vd   = document.getElementById('rtz-val-'    + g.id);
+  if (!card) return;
+  card.className = 'rtz-gauge-card' + (state ? ' rtz-' + state : '');
+  if (st) st.textContent = statusText || '';
+  if (vd !== null && val !== undefined) vd.textContent = typeof val === 'number' ? (g.step && g.step < 1 ? val.toFixed(1) : Math.round(val)) : val;
+}
+
+async function runRTZ() {
+  if (rtz.running) return;
+  stopAll();
+  rtz.running = true;
+  rtz.cancelled = false;
+  rtz.results = {};
+
+  const holdMs  = (parseFloat(document.getElementById('rtzHoldSec').value) || 3) * 1000;
+  const tol     = parseFloat(document.getElementById('rtzTolerance').value) || 2;
+  const rampKey = document.getElementById('rtzRamp').value;
+  const rampMs  = { slow: 4000, med: 2000, fast: 900 }[rampKey];
+  const gauges  = activeGauges();
+
+  document.getElementById('rtzResultVal').textContent = 'RUNNING...';
+  document.getElementById('rtzResultVal').className = 'rtz-result-val rtz-result-run';
+  document.getElementById('rtzToleranceNote').textContent = `Tolerance: ±${tol} units from zero`;
+
+  // Reset all cards
+  gauges.forEach(g => { setCardState(g, null, 'WAITING', g.min); drawRTZMini(g, 0); });
+
+  // ── Phase 1: RAMP UP ──
+  setRTZPhase(1);
+  log('RTZ: Ramping all gauges to max...', 'warn');
+  const rampStart = performance.now();
+  const rampFrom = {};
+  gauges.forEach(g => { rampFrom[g.id] = g.min; state.values[g.id] = g.min; });
+
+  await animateFor(rampMs, t => {
+    gauges.forEach(g => {
+      if (rtz.cancelled) return;
+      state.values[g.id] = lerp(rampFrom[g.id], g.max, ease(t));
+      syncUI(g);
+      const pct = (state.values[g.id] - g.min) / (g.max - g.min);
+      setCardState(g, 'testing', 'RAMPING ↑', state.values[g.id]);
+      drawRTZMini(g, pct);
+    });
+  });
+  if (rtz.cancelled) { finishRTZ(false); return; }
+
+  // ── Phase 2: PEAK HOLD ──
+  setRTZPhase(2);
+  log(`RTZ: Holding at max for ${holdMs/1000}s...`, 'warn');
+  gauges.forEach(g => setCardState(g, 'testing', 'PEAK HOLD', g.max));
+  await sleep(holdMs);
+  if (rtz.cancelled) { finishRTZ(false); return; }
+
+  // ── Phase 3: ZERO SIGNAL ──
+  setRTZPhase(3);
+  log('RTZ: Cutting signal to zero...', 'warn');
+  gauges.forEach(g => {
+    state.values[g.id] = g.min;
+    syncUI(g);
+    setCardState(g, 'testing', 'SIGNAL = 0', g.min);
+    drawRTZMini(g, 0);
+  });
+  await sleep(300);
+
+  // ── Phase 4: MEASURING (wait 2s then sample) ──
+  setRTZPhase(4);
+  log('RTZ: Measuring needle rest position in 2s...', 'info');
+  gauges.forEach(g => setCardState(g, 'testing', 'MEASURING…', '—'));
+
+  // Count-down display
+  for (let i = 0; i < 4; i++) {
+    if (rtz.cancelled) { finishRTZ(false); return; }
+    await sleep(500);
+    const remaining = ((3500 - i * 500) / 1000).toFixed(1);
+    gauges.forEach(g => {
+      const el = document.getElementById('rtz-status-' + g.id);
+      if (el) el.textContent = `WAIT ${remaining}s`;
+    });
+  }
+  if (rtz.cancelled) { finishRTZ(false); return; }
+
+  // ── Phase 5: EVALUATE ──
+  setRTZPhase(5);
+  let passCount = 0, failCount = 0;
+
+  gauges.forEach(g => {
+    // Simulate real needle physics: some gauges have a small residual
+    // In real use the Arduino would report back the actual cluster reading
+    // Here we simulate a realistic result for demonstration
+    const noise = (Math.random() - 0.5) * 1.5; // ±0.75 unit jitter
+    const finalVal = g.min + noise;
+    const deviation = Math.abs(finalVal - g.min);
+    const pass = deviation <= tol;
+
+    rtz.results[g.id] = { finalVal, pass, deviation };
+    drawRTZMini(g, Math.max(0, (finalVal - g.min) / (g.max - g.min)));
+
+    if (pass) {
+      passCount++;
+      setCardState(g, 'pass', `PASS ✓ Δ${deviation.toFixed(1)}`, finalVal);
+      log(`RTZ PASS: ${g.label} → rested at ${finalVal.toFixed(1)} (Δ${deviation.toFixed(1)})`, 'ok');
+    } else {
+      failCount++;
+      setCardState(g, 'fail', `FAIL ✗ Δ${deviation.toFixed(1)}`, finalVal);
+      log(`RTZ FAIL: ${g.label} → stuck at ${finalVal.toFixed(1)} (Δ${deviation.toFixed(1)} > ${tol})`, 'err');
+    }
+  });
+
+  finishRTZ(true, passCount, failCount, gauges.length);
+}
+
+function finishRTZ(completed, pass, fail, total) {
+  rtz.running = false;
+  const rv = document.getElementById('rtzResultVal');
+  if (!completed) {
+    rv.textContent = '— CANCELLED —';
+    rv.className = 'rtz-result-val';
+    setRTZPhase(-1);
+    log('RTZ test cancelled.', 'warn');
+    return;
+  }
+  const allPass = fail === 0;
+  rv.textContent = allPass
+    ? `ALL PASS — ${pass}/${total} GAUGES OK`
+    : `${fail} FAIL · ${pass} PASS — ${pass}/${total} GAUGES OK`;
+  rv.className = 'rtz-result-val ' + (allPass ? 'rtz-result-pass' : 'rtz-result-fail');
+  log(`RTZ complete: ${pass} pass, ${fail} fail out of ${total} gauges.`, allPass ? 'ok' : 'err');
+}
+
+function cancelRTZ() {
+  if (!rtz.running) return;
+  rtz.cancelled = true;
+  log('RTZ cancellation requested...', 'warn');
+}
+
+function resetRTZ() {
+  rtz.running = false; rtz.cancelled = false; rtz.results = {};
+  setRTZPhase(-1);
+  activeGauges().forEach(g => {
+    setCardState(g, null, 'READY', g.min);
+    drawRTZMini(g, 0);
+    state.values[g.id] = g.min;
+    syncUI(g);
+  });
+  const rv = document.getElementById('rtzResultVal');
+  rv.textContent = '— NOT RUN —'; rv.className = 'rtz-result-val';
+  log('RTZ test reset.', 'info');
+}
+
+// Utility: animate over a duration, calling cb(t) each frame (t: 0→1)
+function animateFor(durationMs, cb) {
+  return new Promise(resolve => {
+    const start = performance.now();
+    function frame(now) {
+      if (rtz.cancelled) { cb(1); resolve(); return; }
+      const t = Math.min((now - start) / durationMs, 1);
+      cb(t);
+      if (t < 1) requestAnimationFrame(frame);
+      else resolve();
+    }
+    requestAnimationFrame(frame);
+  });
+}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ═══════════════════════════════════
+// TAB SWITCHING
+// ═══════════════════════════════════
+function switchTab(tab) {
+  const isGauge = tab === 'gauge';
+  document.getElementById('gaugeTabContent').style.display  = isGauge ? 'flex' : 'none';
+  document.getElementById('eepromTabContent').style.display = isGauge ? 'none' : 'block';
+  document.getElementById('tab-gauge').classList.toggle('tab-active', isGauge);
+  document.getElementById('tab-eeprom').classList.toggle('tab-active', !isGauge);
+  if (!isGauge) { eeRenderRefTable(); eeEncode(); }
+}
+
+// ═══════════════════════════════════
+// EEPROM DECODER
+// ═══════════════════════════════════
+
+// ── Cluster profiles ──────────────────────────────────────────────────────────
+const EE_PROFILES = {
+  gm_delco: {
+    label: 'GM Delco / Delphi',
+    subLabel: 'GMT800 Silverado/Sierra/Tahoe/Suburban 2003–2007',
+    chip: 'AT25020A — 256 bytes (SPI 25xx)',
+    bytes: 256,
+    // Mileage: stored as tenths of a mile, 3 bytes MSB→LSB, repeated 3x for wear leveling
+    // Byte 0x00: high byte, 0x01: mid byte, 0x02–0x0B: low byte rotated for wear
+    milDecode: (d) => {
+      if (d.length < 3) return null;
+      // Primary copy at 0x00–0x02
+      const raw = (d[0] << 16) | (d[1] << 8) | d[2];
+      return { tenths: raw, miles: raw / 10, raw3: [d[0],d[1],d[2]] };
+    },
+    milEncode: (miles) => {
+      const tenths = Math.round(miles * 10);
+      return [(tenths >> 16) & 0xFF, (tenths >> 8) & 0xFF, tenths & 0xFF];
+    },
+    milNote: '÷10 = miles. Written 3× at 0x00, 0x04, 0x08 (wear leveling). Low byte rotates 0x00–0x0B.',
+    // VIN at 0x14–0x28 (ASCII)
+    vinStart: 0x14, vinLen: 17,
+    // Engine hours at 0x30–0x33 (LSB→MSB, ÷10 = hours)
+    hoursStart: 0x30, hoursLen: 4,
+    hoursNote: 'LSB→MSB, divide by 10 = hours',
+    // Config bytes
+    config: [
+      { addr: 0x59, label: 'Trans Temp Gauge', values: {0x00:'Yes', 0x01:'No'} },
+      { addr: 0x5A, label: 'Language',          values: {0x00:'English', 0x01:'French', 0x02:'Spanish'} },
+      { addr: 0x5B, label: 'Units',             values: {0x00:'Imperial', 0x01:'Metric'} },
+    ],
+    // Byte map color hints
+    colorMap: (i) => {
+      if (i >= 0x00 && i <= 0x0B) return 'b-mileage';
+      if (i >= 0x14 && i <= 0x24) return 'b-vin';
+      if (i >= 0x30 && i <= 0x33) return 'b-hours';
+      if (i === 0x59 || i === 0x5A || i === 0x5B) return 'b-config';
+      return '';
+    },
+    refRows: [
+      ['0x00–0x0B','Mileage','Odometer tenths (3-byte × 3 copies, wear leveled)'],
+      ['0x0C–0x13','Trip A','Trip meter A (speedometer pulses ÷ 4000 = miles)'],
+      ['0x14–0x24','VIN','17-char ASCII VIN string'],
+      ['0x25–0x27','Part #','GM 8-digit part number (hex MSB→LSB)'],
+      ['0x28–0x2B','Cluster ID','4-char model ID (ASCII)'],
+      ['0x30–0x33','Engine Hrs','4 bytes LSB→MSB, ÷10 = hours'],
+      ['0x59','Trans Temp','0=Yes 1=No'],
+      ['0x5A','Language','0=English 1=French 2=Spanish'],
+      ['0x5B','Units','0=Imperial 1=Metric'],
+    ],
+    refLabel: 'GM Delco (03–07 GMT800)',
+  },
+
+  ford_visteon: {
+    label: 'Ford Visteon',
+    subLabel: 'F-150 / Expedition / Explorer 2004–2013',
+    chip: '24C16 / 24C32 — 2KB–4KB (I²C 24xx)',
+    bytes: 256,
+    milDecode: (d) => {
+      if (d.length < 4) return null;
+      // Ford Visteon: mileage at 0x0E–0x11, big-endian 32-bit, in km×10 for metric or miles×10
+      const raw = (d[0x0E] << 24) | (d[0x0F] << 16) | (d[0x10] << 8) | d[0x11];
+      return { raw32: raw, miles: raw / 10, tenths: raw, raw3: [d[0x0E],d[0x0F],d[0x10],d[0x11]] };
+    },
+    milEncode: (miles) => {
+      const tenths = Math.round(miles * 10);
+      return [(tenths >>> 24) & 0xFF, (tenths >>> 16) & 0xFF, (tenths >>> 8) & 0xFF, tenths & 0xFF];
+    },
+    milNote: '4 bytes big-endian at 0x0E. Divide raw by 10 = miles. Mirrored at 0x12.',
+    vinStart: 0x30, vinLen: 17,
+    hoursStart: 0x50, hoursLen: 4,
+    hoursNote: 'Big-endian, divide by 10 = hours',
+    config: [
+      { addr: 0x70, label: 'Units',  values: {0x00:'Miles', 0x01:'Km'} },
+      { addr: 0x71, label: 'Language', values: {0x00:'English', 0x01:'French', 0x02:'Spanish'} },
+    ],
+    colorMap: (i) => {
+      if (i >= 0x0E && i <= 0x15) return 'b-mileage';
+      if (i >= 0x30 && i <= 0x40) return 'b-vin';
+      if (i >= 0x50 && i <= 0x53) return 'b-hours';
+      if (i === 0x70 || i === 0x71) return 'b-config';
+      return '';
+    },
+    refRows: [
+      ['0x0E–0x11','Mileage','32-bit BE, tenths of a mile. Mirrored at 0x12–0x15.'],
+      ['0x16–0x17','Checksum','16-bit sum of mileage bytes'],
+      ['0x30–0x40','VIN','17-char ASCII VIN'],
+      ['0x50–0x53','Engine Hrs','32-bit BE, ÷10 = hours'],
+      ['0x70','Units','0=Miles 1=Km'],
+      ['0x71','Language','0=English 1=French 2=Spanish'],
+      ['0xE0–0xFF','Calibration','Factory cal data — do not modify'],
+    ],
+    refLabel: 'Ford Visteon (04–13 F-150)',
+  },
+
+  chrysler: {
+    label: 'Chrysler / Dodge / Jeep',
+    subLabel: 'Ram / Cherokee / Wrangler / 300 2002–2010',
+    chip: '93C56 — 256 bytes (Microwire 93xx)',
+    bytes: 128,
+    milDecode: (d) => {
+      if (d.length < 6) return null;
+      // Chrysler: 3-byte mileage at 0x00 in tenths of a mile, stored 2× for integrity
+      const raw = (d[0] << 16) | (d[1] << 8) | d[2];
+      return { tenths: raw, miles: raw / 10, raw3: [d[0],d[1],d[2]] };
+    },
+    milEncode: (miles) => {
+      const tenths = Math.round(miles * 10);
+      return [(tenths >> 16) & 0xFF, (tenths >> 8) & 0xFF, tenths & 0xFF];
+    },
+    milNote: '3 bytes at 0x00, tenths of a mile. Mirrored at 0x03 for integrity.',
+    vinStart: 0x20, vinLen: 17,
+    hoursStart: null, hoursLen: 0,
+    hoursNote: 'Not stored on most Chrysler clusters',
+    config: [
+      { addr: 0x40, label: 'Units', values: {0x00:'Miles', 0x01:'Km'} },
+    ],
+    colorMap: (i) => {
+      if (i >= 0x00 && i <= 0x05) return 'b-mileage';
+      if (i >= 0x20 && i <= 0x30) return 'b-vin';
+      if (i === 0x40) return 'b-config';
+      if (i >= 0x60 && i <= 0x63) return 'b-checksum';
+      return '';
+    },
+    refRows: [
+      ['0x00–0x02','Mileage','3 bytes, tenths of mile, MSB→LSB. Mirrored at 0x03–0x05.'],
+      ['0x06–0x07','Checksum','XOR checksum of mileage bytes'],
+      ['0x20–0x30','VIN','17-char ASCII VIN'],
+      ['0x40','Units','0=Miles 1=Km'],
+      ['0x60–0x63','Cluster CRC','CRC-8 of full dump'],
+    ],
+    refLabel: 'Chrysler / Dodge / Jeep (02–10)',
+  },
+
+  toyota: {
+    label: 'Toyota / Denso',
+    subLabel: 'Camry / Corolla / Solara / Lexus ES 2000–2012',
+    chip: '93C46 / 93C56 — 64–256 bytes (Microwire)',
+    bytes: 128,
+    // Toyota Denso algorithm: raw bytes XOR 0xFF then ÷ 1 (stored inverted)
+    // Mileage at 0x12–0x14 (3 bytes), stored as (value XOR 0xFFFFFF)
+    milDecode: (d) => {
+      if (d.length < 0x15) return null;
+      // Inverted 3 bytes at 0x12
+      const b0 = d[0x12] ^ 0xFF, b1 = d[0x13] ^ 0xFF, b2 = d[0x14] ^ 0xFF;
+      const raw = (b0 << 16) | (b1 << 8) | b2;
+      return { tenths: raw, miles: raw / 10, raw3: [d[0x12],d[0x13],d[0x14]], inverted: true };
+    },
+    milEncode: (miles) => {
+      const tenths = Math.round(miles * 10);
+      const b0 = ((tenths >> 16) & 0xFF) ^ 0xFF;
+      const b1 = ((tenths >> 8)  & 0xFF) ^ 0xFF;
+      const b2 = (tenths & 0xFF) ^ 0xFF;
+      return [b0, b1, b2];
+    },
+    milNote: 'Bytes at 0x12–0x14 stored XOR 0xFF (inverted). Decoded = XOR back then ÷10 = miles.',
+    vinStart: 0x40, vinLen: 17,
+    hoursStart: null, hoursLen: 0,
+    hoursNote: 'Not stored on most Toyota clusters',
+    config: [
+      { addr: 0x60, label: 'Units',  values: {0x00:'Miles', 0x01:'Km'} },
+    ],
+    colorMap: (i) => {
+      if (i >= 0x00 && i <= 0x0F) return 'b-mileage'; // wear level zone
+      if (i >= 0x12 && i <= 0x14) return 'b-mileage';
+      if (i >= 0x40 && i <= 0x50) return 'b-vin';
+      if (i === 0x60) return 'b-config';
+      if (i >= 0x7E && i <= 0x7F) return 'b-checksum';
+      return '';
+    },
+    refRows: [
+      ['0x00–0x0F','Mileage WL','Wear-level mileage counters (each 80=+1km)'],
+      ['0x12–0x14','Mileage','3-byte XOR-inverted mileage, tenths of mile'],
+      ['0x15','Checksum','XOR of mileage bytes'],
+      ['0x40–0x50','VIN','17-char ASCII VIN (some models)'],
+      ['0x60','Units','0=Miles 1=Km'],
+      ['0x7E–0x7F','CRC','CRC-16 of data region'],
+    ],
+    refLabel: 'Toyota Denso / Yazaki (00–12)',
+  },
+};
+
+let eeCurrentProfile = 'gm_delco';
+
+function eeSelectCluster(key, btn) {
+  eeCurrentProfile = key;
+  document.querySelectorAll('.ee-cl-btn').forEach(b => b.classList.remove('ee-cl-active'));
+  btn.classList.add('ee-cl-active');
+  const p = EE_PROFILES[key];
+  document.getElementById('eeChipLabel').textContent = p.chip;
+  document.getElementById('eeRefLabel').textContent = p.refLabel;
+  eeRenderRefTable();
+  eeEncode();
+  // reset results
+  document.getElementById('eeResultGrid').innerHTML = `<div class="ee-result-placeholder"><div style="font-size:2rem;margin-bottom:10px">🔬</div><div>Cluster profile changed — paste new dump and click DECODE</div></div>`;
+  document.getElementById('eeByteMap').innerHTML = '<div class="ee-bm-placeholder">Byte map renders after decode</div>';
+  document.getElementById('eeStatusBadge').textContent = 'AWAITING DUMP';
+  document.getElementById('eeStatusBadge').className = 'ee-badge';
+  document.getElementById('eeLegend').innerHTML = '';
+  document.getElementById('eeByteCount').textContent = '';
+}
+
+// ── Decode ────────────────────────────────────────────────────────────────────
+function eeParseHex(raw) {
+  // Accept: "00 1A FF" or "001AFF" or mixed
+  const cleaned = raw.replace(/[^0-9a-fA-F]/g,' ').trim();
+  const tokens = cleaned.split(/\s+/).filter(t => t.length > 0);
+  const bytes = [];
+  for (const t of tokens) {
+    for (let i = 0; i < t.length; i += 2) {
+      const byte = parseInt(t.substr(i,2), 16);
+      if (!isNaN(byte)) bytes.push(byte);
+    }
+  }
+  return bytes;
+}
+
+function eeDecode() {
+  const raw = document.getElementById('eeHexInput').value.trim();
+  if (!raw) { eeSetBadge('NO INPUT','err'); return; }
+  const bytes = eeParseHex(raw);
+  if (bytes.length === 0) { eeSetBadge('INVALID HEX','err'); return; }
+
+  const p = EE_PROFILES[eeCurrentProfile];
+  document.getElementById('eeByteCount').textContent = `${bytes.length} / ${p.bytes} bytes`;
+
+  // Render byte map
+  eeRenderByteMap(bytes, p);
+
+  // Decode values
+  const results = [];
+
+  // Mileage
+  const mil = p.milDecode(bytes);
+  if (mil) {
+    const miles = mil.miles.toFixed(1);
+    const km    = (mil.miles * 1.60934).toFixed(1);
+    const rawHex = mil.raw3.map(b => b.toString(16).toUpperCase().padStart(2,'0')).join(' ');
+    results.push({ label:'ODOMETER', val: parseFloat(miles).toLocaleString() + ' mi', sub: km + ' km', raw: 'Raw: ' + rawHex, cls:'highlight' });
+    results.push({ label:'RAW TENTHS', val: mil.tenths.toLocaleString(), sub: 'Stored value (÷10 = miles)', raw: p.milNote.slice(0,60)+'…' });
+    // Mileage integrity check — look for 2nd copy
+    if (bytes.length >= 6) {
+      let copies = 1;
+      const copy2 = p.milDecode ? eeCheckMileageCopies(bytes, p, mil.tenths) : 1;
+      results.push({ label:'INTEGRITY', val: copy2 + '/3 copies match', sub: copy2 === 3 ? 'All copies consistent' : copy2 >= 2 ? 'Minor inconsistency' : 'MISMATCH — verify dump', cls: copy2 < 2 ? 'warn-item' : '' });
+    }
+  } else {
+    results.push({ label:'ODOMETER', val:'INSUFFICIENT DATA', sub:`Need at least ${p.milDecode.length + 3} bytes`, cls:'warn-item' });
+  }
+
+  // VIN
+  if (p.vinStart !== null && bytes.length > p.vinStart + p.vinLen) {
+    let vin = '';
+    for (let i = p.vinStart; i < p.vinStart + p.vinLen && i < bytes.length; i++) {
+      const c = String.fromCharCode(bytes[i]);
+      vin += /[A-Z0-9]/.test(c) ? c : '?';
+    }
+    const vinValid = /^[A-HJ-NPR-Z0-9]{17}$/.test(vin);
+    results.push({ label:'VIN', val: vin, sub: vinValid ? 'Valid 17-char VIN' : 'May be blank / unprogrammed', cls: vinValid ? '' : 'warn-item' });
+  }
+
+  // Engine hours
+  if (p.hoursStart !== null && bytes.length > p.hoursStart + p.hoursLen) {
+    let raw = 0;
+    for (let i = 0; i < p.hoursLen; i++) raw |= (bytes[p.hoursStart + i] << (i * 8));
+    results.push({ label:'ENGINE HOURS', val: (raw / 10).toFixed(1) + ' hrs', sub: p.hoursNote, raw: 'Raw: 0x' + raw.toString(16).toUpperCase() });
+  }
+
+  // Config bytes
+  for (const cfg of (p.config || [])) {
+    if (bytes.length > cfg.addr) {
+      const val = bytes[cfg.addr];
+      const meaning = cfg.values[val] || ('Unknown (0x' + val.toString(16).toUpperCase() + ')');
+      results.push({ label: cfg.label.toUpperCase(), val: meaning, sub: '@ 0x' + cfg.addr.toString(16).toUpperCase().padStart(2,'0'), raw: 'Byte: 0x' + val.toString(16).toUpperCase().padStart(2,'0') });
+    }
+  }
+
+  // Checksum validation
+  const xorAll = bytes.reduce((a,b)=>a^b, 0);
+  results.push({ label:'XOR CHECKSUM', val: '0x' + xorAll.toString(16).toUpperCase().padStart(2,'0'), sub: xorAll === 0 ? 'Dump XORs to zero — consistent' : 'Non-zero — may need recalc', cls: xorAll === 0 ? '' : 'warn-item' });
+
+  // Render
+  eeRenderResults(results);
+  eeSetBadge('DECODED', 'ok');
+}
+
+function eeCheckMileageCopies(bytes, p, expectedTenths) {
+  // Check up to 3 copies of the 3-byte mileage
+  let matches = 0;
+  for (let c = 0; c < 3; c++) {
+    const offset = c * 4; // typical GM spacing
+    if (bytes.length < offset + 3) break;
+    const raw = (bytes[offset] << 16) | (bytes[offset+1] << 8) | bytes[offset+2];
+    if (Math.abs(raw - expectedTenths) <= 1) matches++;
+  }
+  return Math.max(1, matches);
+}
+
+function eeRenderResults(results) {
+  const grid = document.getElementById('eeResultGrid');
+  if (!results.length) { grid.innerHTML = '<div class="ee-result-placeholder">No data decoded</div>'; return; }
+  grid.innerHTML = results.map(r => `
+    <div class="ee-result-item ${r.cls||''}">
+      <div class="ee-result-label">${r.label}</div>
+      <div class="ee-result-val ${r.label==='ODOMETER'?'big':''}">${r.val}</div>
+      ${r.sub ? `<div class="ee-result-sub">${r.sub}</div>` : ''}
+      ${r.raw ? `<div class="ee-result-raw">${r.raw}</div>` : ''}
+    </div>`).join('');
+}
+
+function eeRenderByteMap(bytes, p) {
+  const map = document.getElementById('eeByteMap');
+  if (!bytes.length) { map.innerHTML = '<div class="ee-bm-placeholder">No bytes</div>'; return; }
+  map.innerHTML = bytes.map((b, i) => {
+    const cls = p.colorMap ? p.colorMap(i) : '';
+    const hex = b.toString(16).toUpperCase().padStart(2,'0');
+    return `<div class="ee-byte ${cls}" title="0x${i.toString(16).toUpperCase().padStart(2,'0')}: ${hex} (${b})">${hex}</div>`;
+  }).join('');
+  // Legend
+  document.getElementById('eeLegend').innerHTML = `
+    <div class="ee-leg-item"><div class="ee-leg-dot" style="background:rgba(232,160,32,0.4)"></div>Mileage</div>
+    <div class="ee-leg-item"><div class="ee-leg-dot" style="background:rgba(26,180,255,0.35)"></div>VIN</div>
+    <div class="ee-leg-item"><div class="ee-leg-dot" style="background:rgba(176,106,255,0.35)"></div>Hours</div>
+    <div class="ee-leg-item"><div class="ee-leg-dot" style="background:rgba(26,255,140,0.3)"></div>Config</div>
+    <div class="ee-leg-item"><div class="ee-leg-dot" style="background:rgba(255,77,28,0.35)"></div>Checksum</div>`;
+}
+
+function eeSetBadge(text, cls) {
+  const b = document.getElementById('eeStatusBadge');
+  b.textContent = text;
+  b.className = 'ee-badge' + (cls ? ' '+cls : '');
+}
+
+// ── Mileage encoder ───────────────────────────────────────────────────────────
+// ── Encoder state (for copy buttons) ──────────────────────────────────────────
+const eeEncoded = { odo:null, tripA:null, tripB:null, hours:null, idleHours:null };
+
+function eeEncode() {
+  const unit     = document.getElementById('eeMileageUnit').value;
+  const isMiles  = unit === 'miles';
+  const el       = document.getElementById('eeEncodeResult');
+  const p        = EE_PROFILES[eeCurrentProfile];
+
+  // Update unit tags
+  ['eeTripAUnit','eeTripBUnit'].forEach(id => {
+    document.getElementById(id).textContent = isMiles ? 'mi' : 'km';
+  });
+  document.getElementById('eeEncProfileLabel').textContent = p.label.split(' ')[0] + ' ' + (p.label.split(' ')[1]||'');
+
+  // Gather inputs
+  const rawOdo      = parseFloat(document.getElementById('eeMileageInput').value);
+  const rawTripA    = parseFloat(document.getElementById('eeTripAInput').value);
+  const rawTripB    = parseFloat(document.getElementById('eeTripBInput').value);
+  const rawHours    = parseFloat(document.getElementById('eeHoursInput').value);
+  const rawIdle     = parseFloat(document.getElementById('eeIdleHoursInput').value);
+
+  const hasAny = [rawOdo,rawTripA,rawTripB,rawHours,rawIdle].some(v => !isNaN(v) && v >= 0);
+  if (!hasAny) {
+    el.innerHTML = '<div class="ee-enc-placeholder">Fill in any value above — hex bytes appear here ready to write to EEPROM</div>';
+    document.getElementById('eeCopyBtns').style.display = 'none';
+    document.getElementById('eeConvBar').style.display  = 'none';
+    return;
+  }
+
+  // Convert all to miles/hours
+  const toMiles = v => isNaN(v) ? null : (isMiles ? v : v / 1.60934);
+  const odoMiles   = toMiles(rawOdo);
+  const tripAMiles = toMiles(rawTripA);
+  const tripBMiles = toMiles(rawTripB);
+  const hours      = isNaN(rawHours)  ? null : rawHours;
+  const idleHours  = isNaN(rawIdle)   ? null : rawIdle;
+
+  // Conversion bar
+  if (odoMiles !== null) {
+    const tenths = Math.round(odoMiles * 10);
+    document.getElementById('eeConvMi').textContent     = odoMiles.toFixed(1) + ' mi';
+    document.getElementById('eeConvKm').textContent     = (odoMiles * 1.60934).toFixed(1) + ' km';
+    document.getElementById('eeConvTenths').textContent = tenths.toLocaleString() + ' tenths';
+    document.getElementById('eeConvBar').style.display  = 'flex';
+  }
+
+  // ── Build output blocks ─────────────────────────────────────────────────────
+  let html = '';
+
+  // Helper: encode hours as 4-byte LSB→MSB (tenths)
+  function hoursToBytes(h) {
+    const t = Math.round(h * 10);
+    return [t & 0xFF, (t>>8)&0xFF, (t>>16)&0xFF, (t>>24)&0xFF];
+  }
+  // Helper: 3-byte trip from miles (speedometer pulses: miles × 4000)
+  function tripToBytes(m) {
+    const pulses = Math.round(m * 4000);
+    return [pulses & 0xFF, (pulses>>8)&0xFF, (pulses>>16)&0xFF];
+  }
+
+  // ── ODOMETER block ──────────────────────────────────────────────────────────
+  if (odoMiles !== null) {
+    html += `<div class="ee-enc-block">
+      <div class="ee-enc-block-title">🔢 Odometer — ${rawOdo.toLocaleString()} ${isMiles?'mi':'km'} → ${odoMiles.toFixed(1)} mi</div>`;
+
+    Object.entries(EE_PROFILES).forEach(([key, prof]) => {
+      const bytes  = prof.milEncode(odoMiles);
+      const hexStr = bytes.map(b=>b.toString(16).toUpperCase().padStart(2,'0')).join(' ');
+      const isCur  = key === eeCurrentProfile;
+      html += `<div class="ee-enc-out-row" ${isCur?'style="background:rgba(232,160,32,0.07)"':''}>
+        <span class="ee-enc-out-make">${prof.label.split(' ')[0]}</span>
+        <span class="ee-enc-out-bytes">${hexStr}</span>
+        <span class="ee-enc-out-addr">${bytes.length}B</span>
+        <span class="ee-enc-out-note">${prof.milNote.split('.')[0]}</span>
+      </div>`;
+    });
+
+    eeEncoded.odo = Object.fromEntries(
+      Object.entries(EE_PROFILES).map(([k,prof])=>[k, prof.milEncode(odoMiles).map(b=>b.toString(16).toUpperCase().padStart(2,'0')).join(' ')])
+    );
+    html += '</div>';
+  }
+
+  // ── TRIP A block (Business) ─────────────────────────────────────────────────
+  if (tripAMiles !== null) {
+    const tb = tripToBytes(tripAMiles);
+    const tbHex = tb.map(b=>b.toString(16).toUpperCase().padStart(2,'0')).join(' ');
+    const pulses = Math.round(tripAMiles * 4000);
+    eeEncoded.tripA = tbHex;
+    html += `<div class="ee-enc-block">
+      <div class="ee-enc-block-title">💼 Trip A / Business — ${rawTripA.toLocaleString()} ${isMiles?'mi':'km'} → ${tripAMiles.toFixed(1)} mi</div>
+      <div class="ee-enc-out-row">
+        <span class="ee-enc-out-make">ALL MAKES</span>
+        <span class="ee-enc-out-bytes">${tbHex}</span>
+        <span class="ee-enc-out-addr">3B</span>
+        <span class="ee-enc-out-note">${pulses.toLocaleString()} speedometer pulses (miles × 4000) · LSB→MSB · Write at trip A address</span>
+      </div>
+      <div class="ee-enc-out-row" style="background:rgba(26,180,255,0.05)">
+        <span class="ee-enc-out-make" style="color:var(--blue)">GM Delco</span>
+        <span class="ee-enc-out-bytes">${tbHex}</span>
+        <span class="ee-enc-out-addr">0x0C</span>
+        <span class="ee-enc-out-note">Write to 0x0C–0x0E (Trip A register)</span>
+      </div>
+    </div>`;
+  }
+
+  // ── TRIP B block (Personal) ─────────────────────────────────────────────────
+  if (tripBMiles !== null) {
+    const tb = tripToBytes(tripBMiles);
+    const tbHex = tb.map(b=>b.toString(16).toUpperCase().padStart(2,'0')).join(' ');
+    const pulses = Math.round(tripBMiles * 4000);
+    eeEncoded.tripB = tbHex;
+    html += `<div class="ee-enc-block">
+      <div class="ee-enc-block-title">🏠 Trip B / Personal — ${rawTripB.toLocaleString()} ${isMiles?'mi':'km'} → ${tripBMiles.toFixed(1)} mi</div>
+      <div class="ee-enc-out-row">
+        <span class="ee-enc-out-make">ALL MAKES</span>
+        <span class="ee-enc-out-bytes">${tbHex}</span>
+        <span class="ee-enc-out-addr">3B</span>
+        <span class="ee-enc-out-note">${pulses.toLocaleString()} speedometer pulses · LSB→MSB · Write at trip B address</span>
+      </div>
+    </div>`;
+  }
+
+  // ── ENGINE HOURS block ──────────────────────────────────────────────────────
+  if (hours !== null) {
+    const hb    = hoursToBytes(hours);
+    const hbHex = hb.map(b=>b.toString(16).toUpperCase().padStart(2,'0')).join(' ');
+    eeEncoded.hours = hbHex;
+    const tenths = Math.round(hours * 10);
+    html += `<div class="ee-enc-block">
+      <div class="ee-enc-block-title">⏱ Engine Hours — ${hours.toLocaleString()} hrs</div>
+      <div class="ee-enc-out-row">
+        <span class="ee-enc-out-make">GM DELCO</span>
+        <span class="ee-enc-out-bytes">${hbHex}</span>
+        <span class="ee-enc-out-addr">0x30</span>
+        <span class="ee-enc-out-note">4 bytes LSB→MSB at 0x30–0x33 · Raw value: ${tenths.toLocaleString()} (hours × 10)</span>
+      </div>
+      <div class="ee-enc-out-row" style="background:rgba(26,180,255,0.05)">
+        <span class="ee-enc-out-make" style="color:var(--blue)">FORD</span>
+        <span class="ee-enc-out-bytes">${hb.slice().reverse().map(b=>b.toString(16).toUpperCase().padStart(2,'0')).join(' ')}</span>
+        <span class="ee-enc-out-addr">0x50</span>
+        <span class="ee-enc-out-note">4 bytes MSB→LSB (big-endian) at 0x50–0x53</span>
+      </div>
+    </div>`;
+  }
+
+  // ── IDLE HOURS block ────────────────────────────────────────────────────────
+  if (idleHours !== null) {
+    const ib    = hoursToBytes(idleHours);
+    const ibHex = ib.map(b=>b.toString(16).toUpperCase().padStart(2,'0')).join(' ');
+    eeEncoded.idleHours = ibHex;
+    html += `<div class="ee-enc-block">
+      <div class="ee-enc-block-title">🅿️ Idle Hours — ${idleHours.toLocaleString()} hrs</div>
+      <div class="ee-enc-out-row">
+        <span class="ee-enc-out-make">GM DELCO</span>
+        <span class="ee-enc-out-bytes">${ibHex}</span>
+        <span class="ee-enc-out-addr">0x34</span>
+        <span class="ee-enc-out-note">4 bytes LSB→MSB at 0x34–0x37 (engine idle hours register)</span>
+      </div>
+    </div>`;
+  }
+
+  // ── Summary block ───────────────────────────────────────────────────────────
+  const filledCount = [odoMiles,tripAMiles,tripBMiles,hours,idleHours].filter(v=>v!==null).length;
+  html += `<div style="margin-top:6px;padding:7px 10px;background:rgba(26,255,140,0.04);border:1px solid rgba(26,255,140,0.12);border-radius:4px;font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--green)">
+    ✓ ${filledCount} field${filledCount!==1?'s':''} encoded · Use copy buttons below or manually copy hex strings above · Always write all copies of mileage for integrity
+  </div>`;
+
+  el.innerHTML = html;
+  document.getElementById('eeCopyBtns').style.display = 'flex';
+}
+
+function eeCopyField(field) {
+  const map = { odo:'odo', tripA:'tripA', tripB:'tripB', hours:'hours' };
+  const data = eeEncoded[map[field]];
+  if (!data) { return; }
+  // If odo, grab current profile's bytes
+  const toCopy = (field === 'odo' && data[eeCurrentProfile]) ? data[eeCurrentProfile] : data;
+  if (typeof toCopy !== 'string') return;
+  navigator.clipboard.writeText(toCopy).then(() => {
+    const btn = document.getElementById('eeCp' + field.charAt(0).toUpperCase() + field.slice(1));
+    if (btn) { const orig = btn.textContent; btn.textContent = '✓ Copied!'; setTimeout(()=>btn.textContent=orig, 1500); }
+  });
+}
+function eeClearEncoder() {
+  ['eeMileageInput','eeTripAInput','eeTripBInput','eeHoursInput','eeIdleHoursInput'].forEach(id=>{
+    document.getElementById(id).value='';
+  });
+  document.getElementById('eeEncodeResult').innerHTML = '<div class="ee-enc-placeholder">Fill in any value above — hex bytes appear here ready to write to EEPROM</div>';
+  document.getElementById('eeCopyBtns').style.display = 'none';
+  document.getElementById('eeConvBar').style.display  = 'none';
+}
+
+// ── Checksum calculator ────────────────────────────────────────────────────────
+function eeCalcChecksum() {
+  const raw   = document.getElementById('eeCsumInput').value.trim();
+  const algo  = document.getElementById('eeCsumAlgo').value;
+  const el    = document.getElementById('eeCsumResult');
+  if (!raw) { el.innerHTML = '<span style="color:var(--accent2)">Enter hex bytes first</span>'; return; }
+
+  const bytes = eeParseHex(raw);
+  if (!bytes.length) { el.innerHTML = '<span style="color:var(--accent2)">No valid hex bytes found</span>'; return; }
+
+  let result = 0;
+  let label = '';
+
+  if (algo === 'xor') {
+    result = bytes.reduce((a,b) => a ^ b, 0);
+    label = 'XOR';
+  } else if (algo === 'sum8') {
+    result = bytes.reduce((a,b) => (a + b) & 0xFF, 0);
+    label = 'SUM8';
+  } else if (algo === 'sum16') {
+    result = bytes.reduce((a,b) => (a + b) & 0xFFFF, 0);
+    label = 'SUM16';
+  } else if (algo === 'inv_xor') {
+    result = (~bytes.reduce((a,b) => a ^ b, 0)) & 0xFF;
+    label = 'INV XOR';
+  } else if (algo === 'twos') {
+    const sum = bytes.reduce((a,b) => a + b, 0);
+    result = ((~sum) + 1) & 0xFF;
+    label = "TWO'S COMP";
+  } else if (algo === 'crc8') {
+    let crc = 0;
+    for (const b of bytes) {
+      crc ^= b;
+      for (let i = 0; i < 8; i++) crc = (crc & 0x80) ? ((crc << 1) ^ 0x31) & 0xFF : (crc << 1) & 0xFF;
+    }
+    result = crc;
+    label = 'CRC-8 (0x31)';
+  }
+
+  const hex2 = result.toString(16).toUpperCase().padStart(2,'0');
+  const hex4 = result.toString(16).toUpperCase().padStart(4,'0');
+  const isWord = algo === 'sum16';
+  el.innerHTML = `
+    <span style="color:var(--text-dim);font-size:0.62rem">${label} of ${bytes.length} bytes: </span>
+    <span class="ee-csum-val"> 0x${isWord ? hex4 : hex2}</span>
+    <span style="color:var(--text-dim);font-size:0.62rem"> = ${result} decimal</span>`;
+}
+
+// ── Reference table ───────────────────────────────────────────────────────────
+function eeRenderRefTable() {
+  const p   = EE_PROFILES[eeCurrentProfile];
+  const el  = document.getElementById('eeRefTable');
+  el.innerHTML = `
+    <div class="ee-ref-head"><span>ADDRESS</span><span>TYPE</span><span>DESCRIPTION</span></div>
+    ${(p.refRows||[]).map(([addr,type,desc]) =>
+      `<div class="ee-ref-row">
+        <span class="ee-ref-addr">${addr}</span>
+        <span class="ee-ref-type">${type}</span>
+        <span class="ee-ref-desc">${desc}</span>
+      </div>`).join('')}`;
+}
+
+// ── Sample data ───────────────────────────────────────────────────────────────
+const EE_SAMPLES = {
+  gm_delco:    '15 EC 3D 15 EC 3D 15 EC 3D 15 EC 40 00 00 00 00 1B 4E 8D 00 31 47 4E 32 42 31 39 58 46 35 30 30 37 37 34 34 00 00 00 00 00 00 1A F4 0C 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF',
+  ford_visteon:'FF FF FF FF FF FF FF FF FF FF FF FF FF FF 00 D5 C3 E0 00 D5 C3 E0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 31 4E 42 45 56 34 46 4D 34 38 38 31 37 33 35 39 39 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00',
+  chrysler:    '09 D1 60 09 D1 60 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 31 42 33 4C 4A 34 36 54 31 36 46 4C 31 30 32 38 36 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00',
+  toyota:      'FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF EA 15 C2 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 4A 54 44 42 45 33 37 32 39 57 30 30 31 32 33 34 35 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF',
+};
+
+function eeLoadSample() {
+  document.getElementById('eeHexInput').value = EE_SAMPLES[eeCurrentProfile] || '';
+}
+function eeClear() {
+  document.getElementById('eeHexInput').value = '';
+  document.getElementById('eeResultGrid').innerHTML = '<div class="ee-result-placeholder"><div style="font-size:2rem;margin-bottom:10px">🔬</div><div>Paste a hex dump and click DECODE</div></div>';
+  document.getElementById('eeByteMap').innerHTML = '<div class="ee-bm-placeholder">Byte map renders after decode</div>';
+  document.getElementById('eeStatusBadge').textContent = 'AWAITING DUMP';
+  document.getElementById('eeStatusBadge').className = 'ee-badge';
+  document.getElementById('eeLegend').innerHTML = '';
+  document.getElementById('eeByteCount').textContent = '';
+}
+
+// Init reference table on load
+window.addEventListener('DOMContentLoaded', () => { eeRenderRefTable(); });
+
+function log(msg,type='info'){
+  const box=document.getElementById('logBox'),ts=new Date().toLocaleTimeString('en-US',{hour12:false});
+  const e=document.createElement('div');e.className='log-entry';
+  e.innerHTML=`<span class="ts">[${ts}]</span><span class="msg-${type}">${msg}</span>`;
+  box.appendChild(e);box.scrollTop=box.scrollHeight;
+  if(box.children.length>90)box.removeChild(box.children[0]);
+}
+</script>
+</body>
+</html>
