@@ -1,0 +1,6 @@
+[[redirects]]
+  from = "/auth/*"
+  to = "https://zygaojjfnmhnopmqtqoo.supabase.co/auth/:splat"
+  status = 200
+  force = true
+  headers = {X-From = "Netlify"}
