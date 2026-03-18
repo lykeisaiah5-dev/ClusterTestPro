@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BenchPro — DB25 Harness Library</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0c0f;--surface:#111418;--surface2:#181c22;--border:#1e2530;
+  --accent:#e8a020;--green:#1aff8c;--blue:#1ab4ff;--purple:#b06aff;
+  --text:#d0d8e8;--text-dim:#5a6478;--text-mid:#8a96aa;
+  --red:#ff4d1c;--yellow:#f0c040;--pink:#ff6eb4;--cyan:#00ffcc;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+
+/* HEADER */
+header{display:flex;align-items:center;gap:12px;padding:11px 20px;border-bottom:1px solid var(--border);background:rgba(10,12,15,0.97);backdrop-filter:blur(14px);position:sticky;top:0;z-index:100;flex-wrap:wrap;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:0.95rem;letter-spacing:0.14em;color:var(--accent);display:flex;align-items:center;gap:8px;text-shadow:0 0 16px rgba(232,160,32,0.5);}
+.logo-ring{width:24px;height:24px;border:2px solid var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.5rem;animation:pulse 3s ease-in-out infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 8px rgba(232,160,32,0.4)}50%{box-shadow:0 0 20px rgba(232,160,32,0.7)}}
+.hdr-actions{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap;}
+.btn{font-family:'Orbitron',monospace;font-size:0.54rem;font-weight:700;letter-spacing:0.1em;padding:6px 12px;border:1px solid var(--border);background:var(--surface);color:var(--text-mid);border-radius:4px;cursor:pointer;transition:all 0.2s;text-transform:uppercase;}
+.btn:hover{border-color:var(--accent);color:var(--accent);}
+.btn.g{border-color:var(--green);color:var(--green);background:rgba(26,255,140,0.08);}
+.btn.b{border-color:var(--blue);color:var(--blue);background:rgba(26,180,255,0.08);}
+.btn.r{border-color:var(--red);color:var(--red);background:rgba(255,77,28,0.08);}
+.btn.a{border-color:var(--accent);color:var(--accent);background:rgba(232,160,32,0.08);}
+
+/* LAYOUT */
+.shell{display:grid;grid-template-columns:280px 1fr 300px;min-height:calc(100vh - 54px);}
+.panel{border-right:1px solid var(--border);padding:14px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;}
+.panel-right{border-left:1px solid var(--border);border-right:none;padding:14px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;}
+.main{padding:20px;overflow-y:auto;}
+
+/* SIDEBAR */
+.sec-lbl{font-family:'Orbitron',monospace;font-size:0.48rem;font-weight:700;letter-spacing:0.2em;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;}
+input[type=text],input[type=number],select,textarea{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:0.7rem;padding:6px 8px;border-radius:4px;outline:none;width:100%;transition:border-color 0.2s;}
+input[type=text]:focus,input[type=number]:focus,select:focus,textarea:focus{border-color:var(--accent);}
+textarea{resize:vertical;height:60px;}
+label{font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--text-mid);display:block;margin-bottom:3px;}
+
+/* HARNESS LIST */
+.harness-item{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:9px 11px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.harness-item:hover{border-color:var(--accent);}
+.harness-item.active{border-color:var(--accent);background:rgba(232,160,32,0.06);}
+.harness-name{font-family:'Orbitron',monospace;font-size:0.56rem;font-weight:700;letter-spacing:0.08em;}
+.harness-meta{font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:var(--text-dim);margin-top:2px;}
+.h-del{font-size:0.7rem;color:var(--text-dim);cursor:pointer;padding:2px 5px;border-radius:3px;transition:all 0.2s;flex-shrink:0;}
+.h-del:hover{color:var(--red);background:rgba(255,77,28,0.1);}
+
+/* DB25 VISUAL */
+.connector-wrap{display:flex;flex-direction:column;align-items:center;gap:20px;}
+.connector-label{font-family:'Orbitron',monospace;font-size:0.7rem;font-weight:700;letter-spacing:0.14em;color:var(--accent);}
+.db25-body{background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:16px 20px;display:flex;flex-direction:column;gap:10px;position:relative;}
+.db25-body::before{content:'DB25 MALE';font-family:'Orbitron',monospace;font-size:0.44rem;letter-spacing:0.14em;color:var(--text-dim);position:absolute;top:5px;left:50%;transform:translateX(-50%);}
+.pin-row{display:flex;gap:8px;justify-content:center;}
+.pin{width:32px;height:32px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;position:relative;font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--text-dim);background:var(--surface2);}
+.pin:hover{border-color:var(--accent);color:var(--accent);transform:scale(1.1);}
+.pin.selected{border-color:var(--accent);color:var(--accent);background:rgba(232,160,32,0.12);transform:scale(1.12);box-shadow:0 0 12px rgba(232,160,32,0.3);}
+.pin.assigned{color:#000;}
+.pin .pin-tooltip{position:absolute;bottom:38px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:4px 7px;font-family:'Share Tech Mono',monospace;font-size:0.52rem;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.15s;z-index:50;color:var(--text);}
+.pin:hover .pin-tooltip{opacity:1;}
+
+/* SIGNAL COLORS */
+.sig-12v_batt{background:#cc4422;border-color:#ff6644;}
+.sig-12v_ign{background:#cc6600;border-color:#ffaa00;}
+.sig-gnd{background:#223322;border-color:#336633;}
+.sig-canh{background:#0044aa;border-color:#0077ff;}
+.sig-canl{background:#003388;border-color:#0055cc;}
+.sig-vpw{background:#886600;border-color:#ccaa00;}
+.sig-kline{background:#440088;border-color:#8800ff;}
+.sig-lline{background:#004466;border-color:#0088cc;}
+.sig-5v{background:#884400;border-color:#cc8800;}
+.sig-3v3{background:#664400;border-color:#aa7700;}
+.sig-tx{background:#006644;border-color:#00cc88;}
+.sig-rx{background:#005544;border-color:#009966;}
+.sig-sda{background:#004488;border-color:#0066cc;}
+.sig-scl{background:#003366;border-color:#005599;}
+.sig-nc{background:#1a1a1a;border-color:#333;}
+.sig-custom{background:#330066;border-color:#6600cc;}
+
+/* SIGNAL PALETTE */
+.palette{display:flex;flex-wrap:wrap;gap:5px;}
+.sig-pill{display:flex;align-items:center;gap:5px;padding:5px 8px;border-radius:4px;border:1px solid var(--border);cursor:pointer;transition:all 0.2s;font-family:'Share Tech Mono',monospace;font-size:0.58rem;}
+.sig-pill:hover{border-color:var(--accent);}
+.sig-pill.active-sig{border-color:var(--accent);box-shadow:0 0 8px rgba(232,160,32,0.3);}
+.sig-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+/* PIN INFO PANEL */
+.pin-info{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:12px;}
+.pin-num{font-family:'Orbitron',monospace;font-size:1.4rem;font-weight:900;color:var(--accent);}
+.pin-sig-name{font-family:'Orbitron',monospace;font-size:0.7rem;font-weight:700;margin-top:4px;}
+.pin-note{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--text-mid);margin-top:4px;line-height:1.7;}
+
+/* HARNESS SUMMARY TABLE */
+.sum-table{width:100%;border-collapse:collapse;font-family:'Share Tech Mono',monospace;font-size:0.6rem;}
+.sum-table th{background:var(--surface2);color:var(--text-dim);font-size:0.5rem;letter-spacing:0.14em;text-transform:uppercase;padding:5px 7px;border-bottom:1px solid var(--border);text-align:left;}
+.sum-table td{padding:5px 7px;border-bottom:1px solid rgba(30,37,48,0.5);vertical-align:middle;}
+.sum-table tr:last-child td{border-bottom:none;}
+.sum-table tr:hover td{background:var(--surface2);}
+.td-pin{font-weight:700;color:var(--text);width:40px;}
+.td-color{width:12px;height:12px;border-radius:50%;display:inline-block;}
+.td-note{color:var(--text-dim);font-size:0.54rem;}
+
+/* WIRE COLOR SWATCH */
+.wire-colors{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;}
+.wc{width:100%;padding:5px 3px;border-radius:3px;border:1px solid transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Share Tech Mono',monospace;font-size:0.5rem;transition:all 0.2s;}
+.wc:hover{border-color:var(--accent);}
+.wc.sel-wc{border-color:var(--accent);box-shadow:0 0 6px rgba(232,160,32,0.3);}
+
+/* EXPORT */
+.export-box{background:#050708;border:1px solid var(--border);border-radius:4px;padding:10px;font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--green);line-height:1.9;white-space:pre;overflow-x:auto;max-height:200px;overflow-y:auto;}
+
+/* EMPTY STATE */
+.empty{font-family:'Share Tech Mono',monospace;font-size:0.64rem;color:var(--text-dim);padding:20px;text-align:center;line-height:1.9;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><div class="logo-ring">BP</div>DB25 HARNESS LIBRARY</div>
+  <div class="hdr-actions">
+    <button class="btn g" onclick="newHarness()">+ NEW HARNESS</button>
+    <button class="btn b" onclick="exportAll()">EXPORT ALL</button>
+    <button class="btn a" onclick="printHarness()">PRINT SHEET</button>
+    <button class="btn r" onclick="clearAll()">CLEAR ALL</button>
+  </div>
+</header>
+
+<div class="shell">
+
+<!-- ── LEFT — HARNESS LIST + NEW HARNESS FORM ── -->
+<div class="panel">
+
+  <div>
+    <div class="sec-lbl">New Harness</div>
+    <div style="display:flex;flex-direction:column;gap:7px;">
+      <div><label>Harness Name</label><input type="text" id="hName" placeholder="e.g. GM Silverado 03-07"></div>
+      <div><label>Vehicle</label><input type="text" id="hVehicle" placeholder="e.g. 2003-2007 Chevy Silverado 1500"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+        <div><label>Protocol</label>
+          <select id="hProto">
+            <option>CAN 500k</option><option>CAN 125k</option><option>Class 2 VPW</option>
+            <option>K-Line</option><option>CAN + VPW</option><option>CAN + K-Line</option>
+            <option>Multi-bus</option>
+          </select>
+        </div>
+        <div><label>Connector</label>
+          <select id="hConn">
+            <option>OEM Multi-pin</option><option>32-pin GM</option><option>26-pin Chrysler</option>
+            <option>22-pin Ford</option><option>Custom</option>
+          </select>
+        </div>
+      </div>
+      <div><label>Notes</label><textarea id="hNotes" placeholder="Any special wiring notes..."></textarea></div>
+      <button class="btn g" onclick="createHarness()" style="width:100%;">CREATE HARNESS</button>
+    </div>
+  </div>
+
+  <div>
+    <div class="sec-lbl">Saved Harnesses (<span id="harnessCount">0</span>)</div>
+    <div id="harnessList"><div class="empty">No harnesses yet.<br>Create one above.</div></div>
+  </div>
+
+</div>
+
+<!-- ── CENTER — DB25 CONNECTOR + SIGNAL PALETTE ── -->
+<div class="main">
+
+  <div class="connector-wrap">
+
+    <!-- Harness title -->
+    <div id="activeHarnessTitle" class="connector-label">SELECT OR CREATE A HARNESS</div>
+
+    <!-- Signal palette -->
+    <div style="width:100%;">
+      <div class="sec-lbl" style="margin-bottom:8px;">Signal Type — Click to Select, Then Click a Pin</div>
+      <div class="palette" id="sigPalette"></div>
+    </div>
+
+    <!-- DB25 visual connector -->
+    <div style="width:100%;">
+      <div class="sec-lbl" style="margin-bottom:10px;text-align:center;">DB25 Pin Layout — Click Pin to Assign Selected Signal</div>
+      <div style="display:flex;justify-content:center;">
+        <div class="db25-body" id="db25body">
+          <!-- Row 1: pins 1-13 -->
+          <div class="pin-row" id="row1"></div>
+          <!-- Row 2: pins 14-25 -->
+          <div class="pin-row" id="row2"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wire color picker -->
+    <div style="width:100%;">
+      <div class="sec-lbl" style="margin-bottom:8px;">Wire Color</div>
+      <div class="wire-colors" id="wireColors"></div>
+    </div>
+
+    <!-- Custom signal input -->
+    <div style="width:100%;display:flex;gap:8px;align-items:flex-end;">
+      <div style="flex:1;"><label>Custom Signal Label</label><input type="text" id="customSigLabel" placeholder="e.g. FUEL SENDER, TACH OUT..."></div>
+      <button class="btn" onclick="setCustomSig()" style="margin-bottom:0;flex-shrink:0;">SET</button>
+    </div>
+
+    <!-- Notes for selected pin -->
+    <div style="width:100%;display:flex;gap:8px;align-items:flex-end;">
+      <div style="flex:1;"><label>Pin Notes (optional)</label><input type="text" id="pinNotes" placeholder="e.g. 500kbps · 120Ω term required"></div>
+      <button class="btn b" onclick="savePinNote()" style="flex-shrink:0;">SAVE NOTE</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── RIGHT — PIN INFO + HARNESS SUMMARY ── -->
+<div class="panel-right">
+
+  <!-- Selected pin info -->
+  <div>
+    <div class="sec-lbl">Selected Pin</div>
+    <div class="pin-info" id="pinInfoBox">
+      <div class="empty" style="padding:8px;">Click any pin on the connector</div>
+    </div>
+  </div>
+
+  <!-- Clear pin button -->
+  <button class="btn r" onclick="clearPin()" id="clearPinBtn" style="display:none;">CLEAR SELECTED PIN</button>
+
+  <!-- Harness summary -->
+  <div style="flex:1;">
+    <div class="sec-lbl">Harness Pin Summary</div>
+    <div id="summaryWrap">
+      <div class="empty">No pins assigned yet.</div>
+    </div>
+  </div>
+
+  <!-- Export box -->
+  <div>
+    <div class="sec-lbl" style="margin-bottom:6px;">Export / Reference Text</div>
+    <div class="export-box" id="exportBox">Select a harness to see export data.</div>
+  </div>
+
+</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// SIGNAL DEFINITIONS
+// ═══════════════════════════════════════════
+var SIGNALS = [
+  { id:'12v_batt', label:'12V BATT',  color:'#ff4422', desc:'Constant battery 12V (B+)' },
+  { id:'12v_ign',  label:'12V IGN',   color:'#ffaa00', desc:'Ignition switched 12V' },
+  { id:'gnd',      label:'GND',       color:'#33aa33', desc:'Ground / chassis' },
+  { id:'canh',     label:'CAN HIGH',  color:'#0077ff', desc:'CAN bus high (ISO 11898)' },
+  { id:'canl',     label:'CAN LOW',   color:'#0055cc', desc:'CAN bus low (ISO 11898)' },
+  { id:'vpw',      label:'VPW/PCI',   color:'#ccaa00', desc:'J1850 VPW / GM Class 2 / Chrysler PCI' },
+  { id:'kline',    label:'K-LINE',    color:'#9900ff', desc:'ISO 9141 / KWP2000 K-Line' },
+  { id:'lline',    label:'L-LINE',    color:'#0099cc', desc:'ISO 9141 L-Line (init)' },
+  { id:'5v',       label:'5V REF',    color:'#cc8800', desc:'5V sensor reference' },
+  { id:'3v3',      label:'3.3V',      color:'#aa7700', desc:'3.3V logic supply' },
+  { id:'tx',       label:'TX',        color:'#00cc88', desc:'Serial transmit' },
+  { id:'rx',       label:'RX',        color:'#009966', desc:'Serial receive' },
+  { id:'sda',      label:'SDA',       color:'#0066cc', desc:'I2C data line' },
+  { id:'scl',      label:'SCL',       color:'#005599', desc:'I2C clock line' },
+  { id:'nc',       label:'N/C',       color:'#333333', desc:'Not connected' },
+  { id:'custom',   label:'CUSTOM',    color:'#8800cc', desc:'Custom signal — set label below' },
+];
+
+var WIRE_COLORS = [
+  {label:'Red',    hex:'#cc2200'},{label:'Pink',   hex:'#ff88aa'},{label:'Orange', hex:'#cc6600'},
+  {label:'Yellow', hex:'#cccc00'},{label:'Green',  hex:'#006600'},{label:'Lt Grn', hex:'#44cc44'},
+  {label:'Blue',   hex:'#0044aa'},{label:'Lt Blue',hex:'#4488ff'},{label:'Violet', hex:'#880088'},
+  {label:'Purple', hex:'#6600cc'},{label:'Brown',  hex:'#663300'},{label:'Tan',    hex:'#aa8855'},
+  {label:'White',  hex:'#cccccc'},{label:'Gray',   hex:'#666666'},{label:'Black',  hex:'#111111'},
+  {label:'Shld',   hex:'#888844'},
+];
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+var harnesses = JSON.parse(localStorage.getItem('bp_harnesses')||'[]');
+var activeHarnessId = null;
+var selectedPin = null;
+var selectedSig = null;
+var selectedWireColor = '#cc2200';
+var customSigLabel = '';
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', function(){
+  buildPalette();
+  buildWireColors();
+  buildDB25();
+  renderHarnessList();
+  // Load first harness if exists
+  if(harnesses.length > 0){ loadHarness(harnesses[0].id); }
+});
+
+// ═══════════════════════════════════════════
+// BUILD UI
+// ═══════════════════════════════════════════
+function buildPalette(){
+  var el = document.getElementById('sigPalette');
+  el.innerHTML = SIGNALS.map(function(s){
+    return '<div class="sig-pill" id="pill-'+s.id+'" onclick="selectSig(\''+s.id+'\')" title="'+s.desc+'">'+
+      '<div class="sig-dot" style="background:'+s.color+'"></div>'+
+      '<span>'+s.label+'</span>'+
+    '</div>';
+  }).join('');
+}
+
+function buildWireColors(){
+  var el = document.getElementById('wireColors');
+  el.innerHTML = WIRE_COLORS.map(function(c,i){
+    return '<div class="wc'+(i===0?' sel-wc':'')+'" onclick="selectWireColor(\''+c.hex+'\',this)" title="'+c.label+'" style="background:'+c.hex+';color:'+(c.hex==='#cccccc'||c.hex==='#cccc00'?'#000':'#fff')+'">'+c.label+'</div>';
+  }).join('');
+}
+
+function buildDB25(){
+  var row1 = document.getElementById('row1');
+  var row2 = document.getElementById('row2');
+  row1.innerHTML=''; row2.innerHTML='';
+  // Row 1: pins 1-13
+  for(var i=1;i<=13;i++) row1.appendChild(makePin(i));
+  // Row 2: pins 14-25
+  for(var i=14;i<=25;i++) row2.appendChild(makePin(i));
+}
+
+function makePin(num){
+  var div = document.createElement('div');
+  div.className = 'pin';
+  div.id = 'pin-'+num;
+  div.setAttribute('data-pin', num);
+  div.innerHTML = num + '<div class="pin-tooltip" id="tip-'+num+'">Pin '+num+' — Unassigned</div>';
+  div.onclick = function(){ clickPin(num); };
+  return div;
+}
+
+// ═══════════════════════════════════════════
+// HARNESS MANAGEMENT
+// ═══════════════════════════════════════════
+function createHarness(){
+  var name = document.getElementById('hName').value.trim();
+  if(!name){ alert('Enter a harness name'); return; }
+  var h = {
+    id: Date.now().toString(),
+    name: name,
+    vehicle: document.getElementById('hVehicle').value.trim(),
+    proto: document.getElementById('hProto').value,
+    conn: document.getElementById('hConn').value,
+    notes: document.getElementById('hNotes').value.trim(),
+    pins: {},
+    created: new Date().toLocaleDateString()
+  };
+  harnesses.push(h);
+  save();
+  renderHarnessList();
+  loadHarness(h.id);
+  // Clear form
+  document.getElementById('hName').value='';
+  document.getElementById('hVehicle').value='';
+  document.getElementById('hNotes').value='';
+}
+
+function newHarness(){
+  document.getElementById('hName').focus();
+}
+
+function loadHarness(id){
+  activeHarnessId = id;
+  var h = getHarness(id);
+  if(!h) return;
+  document.querySelectorAll('.harness-item').forEach(function(el){el.classList.remove('active');});
+  var el = document.getElementById('hi-'+id);
+  if(el) el.classList.add('active');
+  document.getElementById('activeHarnessTitle').textContent = h.name.toUpperCase() + (h.vehicle?' — '+h.vehicle:'');
+  selectedPin = null;
+  refreshDB25();
+  renderSummary();
+  renderExport();
+  document.getElementById('clearPinBtn').style.display='none';
+  document.getElementById('pinInfoBox').innerHTML='<div class="empty" style="padding:8px;">Click any pin on the connector</div>';
+}
+
+function deleteHarness(id, e){
+  e.stopPropagation();
+  if(!confirm('Delete this harness?')) return;
+  harnesses = harnesses.filter(function(h){return h.id!==id;});
+  save();
+  if(activeHarnessId===id){
+    activeHarnessId=null;
+    buildDB25();
+    document.getElementById('activeHarnessTitle').textContent='SELECT OR CREATE A HARNESS';
+    document.getElementById('summaryWrap').innerHTML='<div class="empty">No pins assigned yet.</div>';
+    document.getElementById('exportBox').textContent='Select a harness to see export data.';
+    document.getElementById('pinInfoBox').innerHTML='<div class="empty" style="padding:8px;">Click any pin on the connector</div>';
+  }
+  renderHarnessList();
+}
+
+function getHarness(id){ return harnesses.find(function(h){return h.id===id;}); }
+
+function renderHarnessList(){
+  var el = document.getElementById('harnessList');
+  document.getElementById('harnessCount').textContent = harnesses.length;
+  if(!harnesses.length){ el.innerHTML='<div class="empty">No harnesses yet.<br>Create one above.</div>'; return; }
+  el.innerHTML = harnesses.map(function(h){
+    var pinCount = Object.keys(h.pins||{}).filter(function(p){return h.pins[p].sig!=='nc';}).length;
+    return '<div class="harness-item'+(activeHarnessId===h.id?' active':'')+'" id="hi-'+h.id+'" onclick="loadHarness(\''+h.id+'\')">'+
+      '<div style="flex:1;min-width:0;">'+
+        '<div class="harness-name">'+h.name+'</div>'+
+        '<div class="harness-meta">'+(h.vehicle||'No vehicle')+'</div>'+
+        '<div class="harness-meta">'+h.proto+' · '+pinCount+' pins assigned</div>'+
+      '</div>'+
+      '<div class="h-del" onclick="deleteHarness(\''+h.id+'\',event)" title="Delete">✕</div>'+
+    '</div>';
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+// PIN INTERACTION
+// ═══════════════════════════════════════════
+function selectSig(sigId){
+  selectedSig = sigId;
+  document.querySelectorAll('.sig-pill').forEach(function(p){p.classList.remove('active-sig');});
+  document.getElementById('pill-'+sigId).classList.add('active-sig');
+}
+
+function selectWireColor(hex, el){
+  selectedWireColor = hex;
+  document.querySelectorAll('.wc').forEach(function(w){w.classList.remove('sel-wc');});
+  el.classList.add('sel-wc');
+}
+
+function setCustomSig(){
+  customSigLabel = document.getElementById('customSigLabel').value.trim().toUpperCase();
+  if(!customSigLabel){ alert('Enter a custom signal label'); return; }
+  selectSig('custom');
+  log('Custom signal set: '+customSigLabel);
+}
+
+function clickPin(num){
+  if(!activeHarnessId){ alert('Select or create a harness first'); return; }
+  // If no signal selected — just select the pin for viewing
+  selectedPin = num;
+  // If signal selected — assign it
+  if(selectedSig){
+    var h = getHarness(activeHarnessId);
+    if(!h.pins) h.pins={};
+    var sig = SIGNALS.find(function(s){return s.id===selectedSig;});
+    var label = selectedSig==='custom' ? (customSigLabel||'CUSTOM') : sig.label;
+    h.pins[num] = {
+      sig: selectedSig,
+      label: label,
+      color: sig.color,
+      wireColor: selectedWireColor,
+      note: h.pins[num] ? (h.pins[num].note||'') : ''
+    };
+    save();
+  }
+  refreshDB25();
+  showPinInfo(num);
+  renderSummary();
+  renderExport();
+  document.getElementById('clearPinBtn').style.display='block';
+  // Load existing note
+  var h2 = getHarness(activeHarnessId);
+  var pd = h2&&h2.pins?h2.pins[num]:null;
+  document.getElementById('pinNotes').value = pd&&pd.note ? pd.note : '';
+}
+
+function savePinNote(){
+  if(!selectedPin||!activeHarnessId) return;
+  var h = getHarness(activeHarnessId);
+  if(!h.pins) h.pins={};
+  if(!h.pins[selectedPin]) h.pins[selectedPin]={sig:'nc',label:'N/C',color:'#333',wireColor:'#111',note:''};
+  h.pins[selectedPin].note = document.getElementById('pinNotes').value.trim();
+  save();
+  showPinInfo(selectedPin);
+  renderSummary();
+  renderExport();
+}
+
+function clearPin(){
+  if(!selectedPin||!activeHarnessId) return;
+  var h = getHarness(activeHarnessId);
+  if(h.pins) delete h.pins[selectedPin];
+  save();
+  refreshDB25();
+  document.getElementById('pinInfoBox').innerHTML='<div class="empty" style="padding:8px;">Pin '+selectedPin+' cleared.</div>';
+  document.getElementById('clearPinBtn').style.display='none';
+  renderSummary();
+  renderExport();
+  selectedPin=null;
+}
+
+function showPinInfo(num){
+  var h = getHarness(activeHarnessId);
+  var pd = h&&h.pins ? h.pins[num] : null;
+  var box = document.getElementById('pinInfoBox');
+  if(!pd){
+    box.innerHTML='<div><div class="pin-num">'+num+'</div><div class="pin-sig-name" style="color:var(--text-dim)">UNASSIGNED</div><div class="pin-note">Click a signal type then click this pin to assign.</div></div>';
+    return;
+  }
+  var sig = SIGNALS.find(function(s){return s.id===pd.sig;});
+  box.innerHTML=
+    '<div>'+
+      '<div class="pin-num">'+num+'</div>'+
+      '<div class="pin-sig-name" style="color:'+pd.color+'">'+pd.label+'</div>'+
+      '<div class="pin-note">'+(sig?sig.desc:'Custom signal')+'</div>'+
+      '<div style="display:flex;align-items:center;gap:6px;margin-top:8px;">'+
+        '<div style="width:14px;height:14px;border-radius:50%;background:'+pd.wireColor+';border:1px solid #555;flex-shrink:0;"></div>'+
+        '<span style="font-family:\'Share Tech Mono\',monospace;font-size:0.6rem;color:var(--text-mid);">'+getWireColorName(pd.wireColor)+' wire</span>'+
+      '</div>'+
+      (pd.note?'<div class="pin-note" style="margin-top:6px;border-top:1px solid var(--border);padding-top:6px;">'+pd.note+'</div>':'')+
+    '</div>';
+}
+
+function getWireColorName(hex){
+  var wc = WIRE_COLORS.find(function(w){return w.hex===hex;});
+  return wc ? wc.label : hex;
+}
+
+// ═══════════════════════════════════════════
+// REFRESH DB25
+// ═══════════════════════════════════════════
+function refreshDB25(){
+  var h = activeHarnessId ? getHarness(activeHarnessId) : null;
+  for(var i=1;i<=25;i++){
+    var pin = document.getElementById('pin-'+i);
+    var tip = document.getElementById('tip-'+i);
+    if(!pin) continue;
+    // Reset
+    pin.className = 'pin';
+    pin.style.background='';
+    pin.style.borderColor='';
+    pin.style.color='';
+    if(selectedPin===i) pin.classList.add('selected');
+    if(h&&h.pins&&h.pins[i]){
+      var pd = h.pins[i];
+      pin.classList.add('assigned');
+      pin.style.background = pd.color;
+      pin.style.borderColor = pd.wireColor;
+      pin.style.color = '#000';
+      if(tip) tip.textContent = 'Pin '+i+' — '+pd.label+(pd.note?' · '+pd.note:'');
+    } else {
+      if(tip) tip.textContent = 'Pin '+i+' — Unassigned';
+    }
+  }
+}
+
+// ═══════════════════════════════════════════
+// SUMMARY TABLE
+// ═══════════════════════════════════════════
+function renderSummary(){
+  var h = activeHarnessId ? getHarness(activeHarnessId) : null;
+  var el = document.getElementById('summaryWrap');
+  if(!h||!h.pins||!Object.keys(h.pins).length){
+    el.innerHTML='<div class="empty">No pins assigned yet.</div>';
+    return;
+  }
+  var rows = '';
+  for(var i=1;i<=25;i++){
+    var pd = h.pins[i];
+    if(!pd) continue;
+    rows += '<tr>'+
+      '<td class="td-pin">'+i+'</td>'+
+      '<td><span class="td-color" style="width:10px;height:10px;border-radius:50%;display:inline-block;background:'+pd.color+';border:1px solid #555;vertical-align:middle;"></span></td>'+
+      '<td style="font-family:\'Share Tech Mono\',monospace;color:'+pd.color+';">'+pd.label+'</td>'+
+      '<td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+pd.wireColor+';border:1px solid #555;vertical-align:middle;"></span></td>'+
+      '<td class="td-note">'+getWireColorName(pd.wireColor)+'</td>'+
+      '<td class="td-note">'+( pd.note||'—')+'</td>'+
+    '</tr>';
+  }
+  el.innerHTML='<table class="sum-table"><thead><tr><th>Pin</th><th colspan="2">Signal</th><th colspan="2">Wire</th><th>Notes</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+// ═══════════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════════
+function renderExport(){
+  var h = activeHarnessId ? getHarness(activeHarnessId) : null;
+  var el = document.getElementById('exportBox');
+  if(!h){ el.textContent='Select a harness to see export data.'; return; }
+  var lines = [];
+  lines.push('BENCHPRO HARNESS — '+h.name.toUpperCase());
+  lines.push('Vehicle : '+(h.vehicle||'—'));
+  lines.push('Protocol: '+h.proto);
+  lines.push('Connector: '+h.conn);
+  if(h.notes) lines.push('Notes   : '+h.notes);
+  lines.push('Created : '+h.created);
+  lines.push('─────────────────────────────────');
+  lines.push('PIN  SIGNAL          WIRE    NOTES');
+  lines.push('─────────────────────────────────');
+  for(var i=1;i<=25;i++){
+    var pd = h.pins?h.pins[i]:null;
+    if(pd){
+      var pin = String(i).padEnd(4);
+      var sig = pd.label.padEnd(16);
+      var wc  = getWireColorName(pd.wireColor).padEnd(8);
+      lines.push(pin+sig+wc+(pd.note||''));
+    } else {
+      lines.push(String(i).padEnd(4)+'—');
+    }
+  }
+  el.textContent = lines.join('\n');
+}
+
+function exportAll(){
+  var h = activeHarnessId ? getHarness(activeHarnessId) : null;
+  if(!h){ alert('Select a harness first'); return; }
+  var text = document.getElementById('exportBox').textContent;
+  var blob = new Blob([text],{type:'text/plain'});
+  var a = document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=h.name.replace(/\s+/g,'_')+'.txt';
+  a.click();
+}
+
+function printHarness(){
+  window.print();
+}
+
+function clearAll(){
+  if(!confirm('Clear ALL harnesses? This cannot be undone.')) return;
+  harnesses=[];
+  activeHarnessId=null;
+  save();
+  renderHarnessList();
+  buildDB25();
+  document.getElementById('activeHarnessTitle').textContent='SELECT OR CREATE A HARNESS';
+  document.getElementById('summaryWrap').innerHTML='<div class="empty">No pins assigned yet.</div>';
+  document.getElementById('exportBox').textContent='Select a harness to see export data.';
+  document.getElementById('pinInfoBox').innerHTML='<div class="empty" style="padding:8px;">Click any pin on the connector</div>';
+}
+
+// ═══════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════
+function save(){
+  localStorage.setItem('bp_harnesses', JSON.stringify(harnesses));
+  renderHarnessList();
+}
+
+function log(msg){ console.log('[BenchPro Harness] '+msg); }
+</script>
+</body>
+</html>
