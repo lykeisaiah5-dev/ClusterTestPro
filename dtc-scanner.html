@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BenchPro — DTC Scanner</title>
+<title>BenchPro — DTC Scanner + ABS Tester</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -100,6 +100,25 @@ header{display:flex;align-items:center;gap:12px;padding:11px 20px;border-bottom:
 .badge.clear{background:rgba(26,255,140,0.07);border:1px solid rgba(26,255,140,0.18);color:var(--green);}
 .empty{font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--text-dim);padding:14px 0;text-align:center;line-height:1.8;}
 .warn-box{background:rgba(255,77,28,0.06);border:1px solid rgba(255,77,28,0.22);border-radius:4px;padding:10px 12px;font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--red);line-height:1.8;}
+/* ABS */
+.wheel-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;}
+.wheel-btn{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:12px 8px;text-align:center;cursor:pointer;transition:all 0.2s;font-family:'Orbitron',monospace;font-size:0.5rem;font-weight:700;letter-spacing:0.08em;color:var(--text-dim);}
+.wheel-btn:hover:not(:disabled){border-color:var(--blue);color:var(--blue);}
+.wheel-btn.bleeding{border-color:var(--blue);background:var(--glow-blue);color:var(--blue);animation:spulse 0.8s infinite;}
+.wheel-btn.done{border-color:var(--green);background:var(--glow-green);color:var(--green);}
+.wheel-btn:disabled{opacity:0.3;cursor:not-allowed;}
+.pump-ring{width:54px;height:54px;border-radius:50%;border:3px solid var(--border);display:flex;align-items:center;justify-content:middle;justify-content:center;font-size:1.3rem;flex-shrink:0;transition:all 0.3s;}
+.pump-ring.spin{border-color:var(--green);animation:spin 0.8s linear infinite;}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.prog-wrap{background:var(--surface2);border-radius:3px;height:4px;overflow:hidden;margin:8px 0;}
+.prog-bar{height:100%;border-radius:3px;transition:width 0.4s ease;background:var(--blue);}
+.dtc-item.bench-normal{border-color:#555;}
+.dtc-item.bench-fail{border-color:var(--red);}
+.dtc-item.bench-warn{border-color:var(--accent);}
+.badge.normal{background:rgba(90,100,120,0.15);border:1px solid #555;color:#888;}
+.badge.fail{background:rgba(255,77,28,0.1);border:1px solid rgba(255,77,28,0.25);color:var(--red);}
+.badge.warn{background:rgba(232,160,32,0.08);border:1px solid rgba(232,160,32,0.2);color:var(--accent);}
+.dtc-verdict{font-family:'Share Tech Mono',monospace;font-size:0.5rem;margin-top:3px;line-height:1.5;color:var(--text-dim);}
 </style>
 </head>
 <body>
@@ -248,6 +267,64 @@ header{display:flex;align-items:center;gap:12px;padding:11px 20px;border-bottom:
     </div>
   </div>
 
+  <!-- ABS MODULE TESTER -->
+  <div class="card">
+    <div class="card-hd">ABS Module Tester
+      <div class="hd-btns">
+        <button class="btn g" id="abs-start-ford" onclick="absStart('FORD')">▶ START FORD</button>
+        <button class="btn b" id="abs-start-honda" onclick="absStart('HONDA')">▶ START HONDA</button>
+        <button class="btn r" id="abs-stop-btn" onclick="absStop()" disabled>■ STOP</button>
+      </div>
+    </div>
+    <div class="two-col">
+      <div>
+        <div style="font-family:'Orbitron',monospace;font-size:0.52rem;font-weight:700;letter-spacing:0.14em;color:var(--text-mid);text-transform:uppercase;margin-bottom:10px;">Brake Bleed Sequence</div>
+        <div class="warn-box" style="margin-bottom:10px;">⚠ Cap ALL brake line ports before bleeding. Module must be powered with IGN on.</div>
+        <div class="wheel-grid">
+          <button class="wheel-btn" id="wb-FL" onclick="absBleed('FL')" disabled>
+            <div class="wheel-lbl">⬛</div>FRONT LEFT
+            <div style="font-family:'Share Tech Mono',monospace;font-size:0.48rem;margin-top:3px;" id="ws-FL">Ready</div>
+          </button>
+          <button class="wheel-btn" id="wb-FR" onclick="absBleed('FR')" disabled>
+            <div class="wheel-lbl">⬛</div>FRONT RIGHT
+            <div style="font-family:'Share Tech Mono',monospace;font-size:0.48rem;margin-top:3px;" id="ws-FR">Ready</div>
+          </button>
+          <button class="wheel-btn" id="wb-RL" onclick="absBleed('RL')" disabled>
+            <div class="wheel-lbl">⬛</div>REAR LEFT
+            <div style="font-family:'Share Tech Mono',monospace;font-size:0.48rem;margin-top:3px;" id="ws-RL">Ready</div>
+          </button>
+          <button class="wheel-btn" id="wb-RR" onclick="absBleed('RR')" disabled>
+            <div class="wheel-lbl">⬛</div>REAR RIGHT
+            <div style="font-family:'Share Tech Mono',monospace;font-size:0.48rem;margin-top:3px;" id="ws-RR">Ready</div>
+          </button>
+        </div>
+        <div style="display:flex;gap:5px;margin-bottom:8px;">
+          <button class="btn b" id="abs-bleed-all" style="flex:1;" onclick="absBleedAll()" disabled>↔ FULL BLEED SEQUENCE</button>
+          <button class="btn r" id="abs-bleed-stop" style="flex:1;" onclick="absBleedStop()" disabled>■ STOP BLEED</button>
+        </div>
+        <div class="prog-wrap"><div class="prog-bar" id="abs-prog" style="width:0%"></div></div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:var(--text-dim);" id="abs-bleed-status">Start ABS module then select wheel or run full sequence.</div>
+      </div>
+      <div>
+        <div style="font-family:'Orbitron',monospace;font-size:0.52rem;font-weight:700;letter-spacing:0.14em;color:var(--text-mid);text-transform:uppercase;margin-bottom:10px;">Pump Motor Test</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+          <div class="pump-ring" id="abs-pump-ring">⚙</div>
+          <div class="live-grid" style="flex:1;grid-template-columns:1fr 1fr 1fr;">
+            <div class="lc"><div class="lc-lbl">Pump</div><div class="lc-val" id="abs-lc-pump">OFF</div></div>
+            <div class="lc"><div class="lc-lbl">Status</div><div class="lc-val" id="abs-lc-status">IDLE</div></div>
+            <div class="lc"><div class="lc-lbl">Make</div><div class="lc-val" id="abs-lc-make" style="font-size:0.7rem;">--</div></div>
+          </div>
+        </div>
+        <button class="btn g" id="abs-pump-btn" style="width:100%;margin-bottom:6px;" onclick="absPumpOn()" disabled>▶ RUN PUMP TEST</button>
+        <button class="btn r" id="abs-pump-off" style="width:100%;" onclick="absPumpOff()" disabled>■ STOP PUMP</button>
+        <div style="margin-top:12px;">
+          <div style="font-family:'Orbitron',monospace;font-size:0.52rem;font-weight:700;letter-spacing:0.14em;color:var(--text-mid);text-transform:uppercase;margin-bottom:8px;">ABS Log</div>
+          <div class="log-box" id="abs-log" style="height:150px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 </div>
 
@@ -315,6 +392,7 @@ function startReadLoop(){
 }
 function handleRx(line){
   if(line.startsWith('DTC:')){ handleDtcRx(line); return; }
+  if(line.startsWith('ABS:')){ handleAbsRx(line); return; }
   var cls='info';
   if(line==='PONG'){cls='ok';line='PONG — Arduino alive ✓';}
   else if(line.startsWith('OK:'))cls='ok';
@@ -464,6 +542,68 @@ function dtcCopyAll(){
   var text=dtcCodeList.map(function(c){return c.code+' - '+c.desc;}).join('\n');
   navigator.clipboard.writeText(text).then(function(){scanLog('Codes copied to clipboard','ok');});
 }
+// ═══════════════════════════════════════════════════
+// DTC PASS/FAIL DATABASE
+// FAIL = module is defective, do not sell
+// WARN = bench artifact, normal for testing
+// NORMAL = expected during bench test, not a real fault
+// ═══════════════════════════════════════════════════
+var DTC_VERDICT = {
+  // WHEEL SPEED SENSORS — FAIL (real hardware fault)
+  'C0031':{v:'FAIL', reason:'LF wheel speed sensor circuit open or shorted — hardware fault'},
+  'C0032':{v:'FAIL', reason:'LF wheel speed sensor signal out of range — sensor or wiring bad'},
+  'C0034':{v:'FAIL', reason:'RF wheel speed sensor circuit fault — hardware fault'},
+  'C0035':{v:'FAIL', reason:'LF wheel speed sensor — hardware fault'},
+  'C0036':{v:'FAIL', reason:'RF wheel speed sensor range fault — hardware fault'},
+  'C0037':{v:'FAIL', reason:'RF wheel speed sensor — hardware fault'},
+  'C0040':{v:'FAIL', reason:'RF wheel speed sensor — hardware fault'},
+  'C0041':{v:'FAIL', reason:'RF WSS range/performance — hardware fault'},
+  'C0045':{v:'FAIL', reason:'LR wheel speed sensor — hardware fault'},
+  'C0046':{v:'FAIL', reason:'LR WSS range/performance — hardware fault'},
+  'C0050':{v:'FAIL', reason:'RR wheel speed sensor — hardware fault'},
+  'C0051':{v:'FAIL', reason:'RR WSS range/performance — hardware fault'},
+  // PUMP AND SOLENOIDS — FAIL (internal module fault)
+  'C0110':{v:'FAIL', reason:'ABS pump motor circuit fault — motor or driver circuit failed'},
+  'C0121':{v:'FAIL', reason:'ABS valve relay circuit fault — internal relay failed'},
+  'C0141':{v:'FAIL', reason:'LR solenoid valve fault — internal valve failure'},
+  'C0161':{v:'FAIL', reason:'ABS/TCS brake switch circuit — switch or wiring fault'},
+  // POWER STEERING — FAIL
+  'C0460':{v:'FAIL', reason:'Power steering torque sensor fault — sensor failed'},
+  'C0461':{v:'FAIL', reason:'PS torque sensor range — sensor out of spec'},
+  'C0469':{v:'FAIL', reason:'Power steering motor circuit — motor or driver failed'},
+  // BENCH NORMAL — these appear on every bench test, not real faults
+  'C0128':{v:'NORMAL', reason:'Bench normal — brake fluid level sensor not connected on bench'},
+  'C0196':{v:'NORMAL', reason:'Bench normal — yaw rate sensor not present on bench'},
+  'U0001':{v:'NORMAL', reason:'Bench normal — CAN bus faults expected without full vehicle network'},
+  'U0100':{v:'NORMAL', reason:'Bench normal — ECM not present on bench'},
+  'U0101':{v:'NORMAL', reason:'Bench normal — TCM not present on bench'},
+  'U0121':{v:'NORMAL', reason:'Bench normal — ABS network isolation expected on bench'},
+  'U0131':{v:'NORMAL', reason:'Bench normal — power steering module not on bench network'},
+  'U0140':{v:'NORMAL', reason:'Bench normal — BCM not present on bench'},
+  'U0155':{v:'NORMAL', reason:'Bench normal — instrument cluster not connected'},
+  // WARN — could be bench or could be real
+  'C0035':{v:'WARN', reason:'Check if wheel speed sensor connector was present when pulled'},
+  'P0016':{v:'WARN', reason:'Crank/cam correlation — may clear after proper initialization'},
+  'P0500':{v:'WARN', reason:'Vehicle speed sensor — expected on bench without wheel input'},
+  'P0700':{v:'WARN', reason:'TCM fault indicator — TCM not present on bench'},
+  // BODY CODES — NORMAL on bench
+  'B0001':{v:'NORMAL', reason:'Bench normal — airbag system not connected'},
+  'B0002':{v:'NORMAL', reason:'Bench normal — airbag system not connected'},
+  'B1001':{v:'WARN',   reason:'ECU hardware fault — check module power supply'},
+  'B2204':{v:'NORMAL', reason:'Bench normal — horn relay not connected on bench'},
+};
+
+function getDtcVerdict(code) {
+  var v = DTC_VERDICT[code];
+  if (v) return v;
+  // Default by code type
+  if (code.startsWith('U')) return {v:'NORMAL', reason:'Network fault — expected on bench without full vehicle network'};
+  if (code.startsWith('B')) return {v:'NORMAL', reason:'Body code — check if related to missing bench connections'};
+  if (code.startsWith('C')) return {v:'FAIL',   reason:'Chassis fault — likely a real hardware issue'};
+  if (code.startsWith('P')) return {v:'WARN',   reason:'Powertrain code — verify with full vehicle context'};
+  return {v:'WARN', reason:'Unknown code type — verify manually'};
+}
+
 function dtcRenderCodes(){
   var list=document.getElementById('dtc-list');
   if(!dtcCodeList.length){
@@ -471,24 +611,237 @@ function dtcRenderCodes(){
       '<div class="dtc-item clear">'+
         '<div class="dtc-code clear">✓ NONE</div>'+
         '<div><div class="dtc-desc">No fault codes found</div>'+
-        '<div class="dtc-sub">Module memory is clean</div></div>'+
+        '<div class="dtc-sub">Module memory is clean — ready to sell</div></div>'+
         '<span class="badge clear">PASS</span>'+
       '</div>';
     dtcLc('lc-count','0','good');
     dtcSi('si-count','0');
     return;
   }
+
+  var failCount=0, warnCount=0, normalCount=0;
+
   list.innerHTML=dtcCodeList.map(function(c){
-    return '<div class="dtc-item active-fault">'+
-      '<div class="dtc-code">'+c.code+'</div>'+
-      '<div><div class="dtc-desc">'+c.desc+'</div>'+
-      '<div class="dtc-sub">Clear after repair and rescan to verify</div></div>'+
-      '<span class="badge act">ACTIVE</span>'+
+    var verdict = getDtcVerdict(c.code);
+    var itemClass, badgeClass, badgeText;
+
+    if(verdict.v==='FAIL'){
+      itemClass='dtc-item bench-fail'; badgeClass='badge fail'; badgeText='FAIL';
+      failCount++;
+    } else if(verdict.v==='WARN'){
+      itemClass='dtc-item bench-warn'; badgeClass='badge warn'; badgeText='WARN';
+      warnCount++;
+    } else {
+      itemClass='dtc-item bench-normal'; badgeClass='badge normal'; badgeText='BENCH NORMAL';
+      normalCount++;
+    }
+
+    return '<div class="'+itemClass+'">'+
+      '<div><div class="dtc-code">'+c.code+'</div></div>'+
+      '<div>'+
+        '<div class="dtc-desc">'+c.desc+'</div>'+
+        '<div class="dtc-verdict">'+verdict.reason+'</div>'+
+      '</div>'+
+      '<span class="'+badgeClass+'">'+badgeText+'</span>'+
     '</div>';
   }).join('');
+
   dtcLc('lc-count',dtcCodeList.length,'bad');
   dtcSi('si-count',dtcCodeList.length);
+
+  // Update banner with overall verdict
+  if(failCount > 0){
+    dtcBanner('fail','❌',failCount+' FAIL CODE(S) — MODULE DEFECTIVE','Hardware faults detected. This module should NOT be sold as working.');
+  } else if(warnCount > 0 && normalCount > 0){
+    dtcBanner('warn','⚠️','BENCH ARTIFACTS + WARNINGS','Normal bench codes present. '+warnCount+' code(s) need further investigation.');
+  } else if(normalCount > 0 && failCount===0 && warnCount===0){
+    dtcBanner('pass','✅','BENCH NORMAL CODES ONLY','All codes are expected bench artifacts. Module is likely good — clear and retest in vehicle.');
+  } else {
+    dtcBanner('warn','⚠️',dtcCodeList.length+' CODE(S) FOUND','Review each code verdict before selling.');
+  }
 }
+
+// ═══════════════════════════════════════════════════
+// ABS MODULE FUNCTIONS
+// ═══════════════════════════════════════════════════
+var absRunning = false;
+var absMake    = '';
+var bleedProgress = 0;
+
+function absLog(msg,cls){
+  var b=document.getElementById('abs-log');if(!b)return;
+  var d=document.createElement('div');d.className='le';
+  var ts=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  d.innerHTML='<span class="ts">['+ts+']</span> <span class="l'+(cls||'info')+'">'+msg+'</span>';
+  b.appendChild(d);b.scrollTop=b.scrollHeight;
+}
+function absLc(id,val,cls){
+  var el=document.getElementById(id);if(!el)return;
+  el.textContent=val;el.className='lc-val'+(cls?' '+cls:'');
+}
+function absControls(on){
+  ['wb-FL','wb-FR','wb-RL','wb-RR','abs-bleed-all',
+   'abs-bleed-stop','abs-pump-btn','abs-pump-off'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.disabled=!on;
+  });
+  document.getElementById('abs-start-ford').disabled=on;
+  document.getElementById('abs-start-honda').disabled=on;
+  document.getElementById('abs-stop-btn').disabled=!on;
+}
+function absStart(make){
+  if(!connected){absLog('Connect Arduino first','err');return;}
+  absMake=make;absRunning=true;
+  absControls(true);
+  absLc('abs-lc-make',make,'good');
+  absLc('abs-lc-status','INIT','warn');
+  absLog('Starting '+make+' ABS module...','info');
+  sendCmd('ABS:START:'+make);
+}
+function absStop(){
+  absRunning=false;
+  absControls(false);
+  absLc('abs-lc-status','IDLE','');
+  absLc('abs-lc-pump','OFF','');
+  absLc('abs-lc-make','--','');
+  var ring=document.getElementById('abs-pump-ring');
+  if(ring){ring.className='pump-ring';ring.textContent='⚙';}
+  ['FL','FR','RL','RR'].forEach(function(w){
+    var btn=document.getElementById('wb-'+w);
+    if(btn)btn.className='wheel-btn';
+    var st=document.getElementById('ws-'+w);
+    if(st)st.textContent='Ready';
+  });
+  document.getElementById('abs-prog').style.width='0%';
+  document.getElementById('abs-bleed-status').textContent='Start ABS module then select wheel or run full sequence.';
+  if(connected)sendCmd('ABS:STOP');
+  absLog('ABS stopped','warn');
+}
+function absBleed(wheel){
+  if(!absRunning){absLog('Start module first','err');return;}
+  absLog('Bleeding '+wheel,'info');
+  var btn=document.getElementById('wb-'+wheel);
+  var st=document.getElementById('ws-'+wheel);
+  if(btn)btn.className='wheel-btn bleeding';
+  if(st)st.textContent='Bleeding...';
+  document.getElementById('abs-bleed-status').textContent='Bleeding '+wheel+' — cycling solenoid valve...';
+  sendCmd('ABS:BLEED:'+wheel);
+}
+function absBleedAll(){
+  if(!absRunning){absLog('Start module first','err');return;}
+  absLog('Full bleed sequence started — RR→RL→FR→FL','info');
+  document.getElementById('abs-bleed-status').textContent='Full sequence: RR → RL → FR → FL';
+  bleedProgress=0;
+  document.getElementById('abs-prog').style.width='0%';
+  sendCmd('ABS:BLEED:ALL');
+}
+function absBleedStop(){
+  absLog('Bleed stopped','warn');
+  ['FL','FR','RL','RR'].forEach(function(w){
+    var btn=document.getElementById('wb-'+w);
+    if(btn)btn.className='wheel-btn';
+    var st=document.getElementById('ws-'+w);
+    if(st)st.textContent='Ready';
+  });
+  document.getElementById('abs-prog').style.width='0%';
+  document.getElementById('abs-bleed-status').textContent='Bleed stopped.';
+  sendCmd('ABS:BLEED:STOP');
+}
+function absPumpOn(){
+  if(!absRunning){absLog('Start module first','err');return;}
+  var ring=document.getElementById('abs-pump-ring');
+  if(ring){ring.className='pump-ring spin';ring.textContent='⚙';}
+  absLc('abs-lc-pump','RUNNING','good');
+  absLog('Pump motor activated','ok');
+  sendCmd('ABS:PUMP:ON');
+}
+function absPumpOff(){
+  var ring=document.getElementById('abs-pump-ring');
+  if(ring){ring.className='pump-ring';ring.textContent='⚙';}
+  absLc('abs-lc-pump','OFF','');
+  absLog('Pump stopped','warn');
+  sendCmd('ABS:PUMP:OFF');
+}
+
+function handleAbsRx(line){
+  if(line==='ABS:CAN_OK:500kbps'){
+    absLc('abs-lc-status','CAN OK','good');
+    absLog('CAN bus initialized at 500kbps','ok');
+  }
+  else if(line==='ABS:CAN_FAIL'){
+    absLc('abs-lc-status','CAN FAIL','bad');
+    absLog('CAN init failed — check MCP2515 wiring','err');
+    absControls(false);
+  }
+  else if(line.startsWith('ABS:STARTED:')){
+    var make=line.substring(12);
+    absLc('abs-lc-status','ONLINE','good');
+    absLog(make+' ABS module online','ok');
+  }
+  else if(line==='ABS:PUMP_ON'){
+    var ring=document.getElementById('abs-pump-ring');
+    if(ring){ring.className='pump-ring spin';}
+    absLc('abs-lc-pump','RUNNING','good');
+  }
+  else if(line==='ABS:PUMP_OFF'){
+    var ring=document.getElementById('abs-pump-ring');
+    if(ring){ring.className='pump-ring';}
+    absLc('abs-lc-pump','OFF','');
+  }
+  else if(line==='ABS:PUMP_CONFIRMED'){
+    absLog('Pump motor confirmed running','ok');
+  }
+  else if(line.startsWith('ABS:BLEED_START:')){
+    var w=line.substring(16);
+    absLog('Bleeding '+w,'info');
+    var btn=document.getElementById('wb-'+w);
+    if(btn)btn.className='wheel-btn bleeding';
+    var st=document.getElementById('ws-'+w);
+    if(st)st.textContent='Bleeding...';
+  }
+  else if(line.startsWith('ABS:BLEED_CYCLE:')){
+    var parts=line.substring(16).split(':');
+    var w=parts[0];
+    var cyc=parseInt(parts[1]);
+    var pct=Math.min((cyc/10)*100,100);
+    document.getElementById('abs-prog').style.width=pct+'%';
+    document.getElementById('abs-bleed-status').textContent=
+      'Bleeding '+w+' — cycle '+cyc+' of 10';
+  }
+  else if(line.startsWith('ABS:BLEED_DONE:')){
+    var w=line.substring(15);
+    var btn=document.getElementById('wb-'+w);
+    if(btn)btn.className='wheel-btn done';
+    var st=document.getElementById('ws-'+w);
+    if(st)st.textContent='Done ✓';
+    absLog(w+' bleed complete','ok');
+    bleedProgress+=25;
+    document.getElementById('abs-prog').style.width=bleedProgress+'%';
+  }
+  else if(line.startsWith('ABS:BLEED_NEXT:')){
+    var w=line.substring(15);
+    document.getElementById('abs-bleed-status').textContent='Moving to '+w+'...';
+    absLog('Next wheel: '+w,'info');
+  }
+  else if(line==='ABS:BLEED_SEQ_DONE'){
+    absLog('Full bleed sequence complete','ok');
+    document.getElementById('abs-bleed-status').textContent='✓ Full bleed sequence complete — all 4 wheels done.';
+    document.getElementById('abs-prog').style.width='100%';
+    absPumpOff();
+  }
+  else if(line==='ABS:BLEED_STOPPED'){
+    absLog('Bleed stopped','warn');
+  }
+  else if(line.startsWith('ABS:SOL:')){
+    absLog(line.substring(4),'info');
+  }
+  else if(line==='ABS:STOPPED'){
+    absLog('ABS stopped','warn');
+  }
+  else if(line.startsWith('ABS:RX:')){
+    absLog('RX: '+line.substring(7),'info');
+  }
+}
+
 function handleDtcRx(line){
   if(line.startsWith('DTC:MODULE:')){
     var modId=line.substring(11);
