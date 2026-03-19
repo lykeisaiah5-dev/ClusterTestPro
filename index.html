@@ -47,6 +47,49 @@ header{display:flex;align-items:center;gap:10px;padding:10px 20px;border-bottom:
 .mod-tab.t-tcm.active{background:#fd79a8;color:#000;}
 .mod-tab.t-eeprom{border-color:#00ffcc;color:#00ffcc;background:rgba(0,255,204,0.08);}
 .mod-tab.t-eeprom.active{background:#00ffcc;color:#000;}
+.mod-tab.t-eps{border-color:#ff6b9d;color:#ff6b9d;background:rgba(255,107,157,0.08);}
+.mod-tab.t-eps.active{background:#ff6b9d;color:#000;}
+
+/* EPS RACK VISUAL */
+.rack-track-wrap{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:14px 16px;}
+.rack-road{position:relative;height:16px;background:var(--border);border-radius:8px;overflow:visible;margin:8px 0;}
+.rack-puck{position:absolute;top:50%;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:#ff6b9d;border:2px solid #fff;box-shadow:0 0 10px rgba(255,107,157,0.6);transition:left 0.35s cubic-bezier(.4,0,.2,1);}
+.rack-puck.left{background:var(--blue);box-shadow:0 0 10px rgba(26,180,255,0.6);}
+.rack-puck.right{background:var(--green);box-shadow:0 0 10px rgba(26,255,140,0.6);}
+.rack-ends{display:flex;justify-content:space-between;font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:var(--text-dim);margin-top:4px;}
+
+/* EPS CAN MONITOR */
+.can-stream{background:#050708;border:1px solid var(--border);border-radius:4px;height:110px;overflow-y:auto;padding:5px 7px;font-family:'Share Tech Mono',monospace;font-size:0.5rem;line-height:1.7;}
+.can-stream::-webkit-scrollbar{width:3px;}
+.can-stream::-webkit-scrollbar-thumb{background:var(--border);}
+.can-frame-tx{color:var(--accent);}
+.can-frame-rx{color:var(--blue);}
+.can-idle-msg{color:var(--text-dim);text-align:center;padding:30px 0;}
+
+/* EPS DIRECTION BUTTONS */
+.dir-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;}
+.dir-card{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:10px 5px;text-align:center;cursor:pointer;transition:all 0.2s;font-family:'Orbitron',monospace;font-size:0.5rem;font-weight:700;letter-spacing:0.08em;color:var(--text-dim);}
+.dir-card:hover:not(:disabled){border-color:#ff6b9d;color:#ff6b9d;}
+.dir-card.active-left{border-color:var(--blue);background:var(--glow-blue);color:var(--blue);}
+.dir-card.active-center{border-color:#ff6b9d;background:rgba(255,107,157,0.08);color:#ff6b9d;}
+.dir-card.active-right{border-color:var(--green);background:var(--glow-green);color:var(--green);}
+.dir-card:disabled{opacity:0.3;cursor:not-allowed;}
+.dir-ico{font-size:1.1rem;margin-bottom:4px;}
+
+/* EPS ASSIST SLIDER */
+.assist-wrap{display:flex;flex-direction:column;gap:6px;}
+.assist-row{display:flex;align-items:center;gap:8px;}
+.assist-inp{flex:1;-webkit-appearance:none;height:3px;background:var(--border);border-radius:2px;outline:none;}
+.assist-inp::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;background:#ff6b9d;border-radius:50%;cursor:pointer;box-shadow:0 0 6px rgba(255,107,157,0.5);}
+.assist-inp:disabled::-webkit-slider-thumb{background:var(--border);cursor:not-allowed;}
+.assist-lbl{font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:var(--text-dim);width:28px;text-align:right;}
+.assist-pct{font-family:'Orbitron',monospace;font-weight:700;font-size:0.9rem;color:#ff6b9d;text-align:center;}
+
+/* EPS WIRING REF */
+.wire-table{display:flex;flex-direction:column;gap:3px;}
+.wire-row{display:grid;grid-template-columns:10px 80px 1fr;gap:6px;align-items:center;font-family:'Share Tech Mono',monospace;font-size:0.52rem;}
+.wire-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.wire-pin{color:var(--accent);}.wire-desc{color:var(--text-dim);}
 
 /* CONNECTION */
 .hdr-right{display:flex;align-items:center;gap:7px;flex-shrink:0;}
@@ -223,6 +266,7 @@ header{display:flex;align-items:center;gap:10px;padding:10px 20px;border-bottom:
     <button class="mod-tab t-bcm" id="tab-bcm" onclick="switchMod('bcm')">🚗 BCM</button>
     <button class="mod-tab t-eeprom" id="tab-eeprom" onclick="switchMod('eeprom')">🔬 EEPROM</button>
     <button class="mod-tab t-tcm" id="tab-tcm" onclick="switchMod('tcm')">⚙ TCM</button>
+    <button class="mod-tab t-eps" id="tab-eps" onclick="switchMod('eps')">🔩 EPS / RACK</button>
     <a href="/db25-library" class="mod-tab" style="text-decoration:none;border-color:rgba(0,255,204,0.3);color:#00ffcc;" target="_blank">🔌 HARNESS LIB ↗</a>
   </div>
 
@@ -459,6 +503,144 @@ header{display:flex;align-items:center;gap:10px;padding:10px 20px;border-bottom:
 </div>
 
 
+<!-- ══════════ EPS TAB ══════════ -->
+<div class="mod-page" id="page-eps">
+  <div class="s-banner" id="eps-banner">
+    <div class="sb-ic">🔩</div>
+    <div><div class="sb-ttl idle" id="eps-banner-ttl">EPS — ELECTRIC POWER STEERING</div><div class="sb-sub" id="eps-banner-sub">2018 Ford F150 PSCM. Connect Arduino CAN chip to HS2CAN+/HS2CAN-. Apply 12V VBATT and VPWR.</div></div>
+  </div>
+
+  <div class="two-col">
+
+    <!-- LEFT COLUMN -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+
+      <!-- SESSION CONTROL -->
+      <div class="card">
+        <div class="card-hd">Session Control
+          <div class="hd-btns">
+            <button class="btn g" id="eps-start-btn" onclick="epsStart()">▶ START</button>
+            <button class="btn r" id="eps-stop-btn" onclick="epsStop()" disabled>■ STOP</button>
+          </div>
+        </div>
+        <div class="live-grid" style="grid-template-columns:1fr 1fr 1fr;">
+          <div class="lc"><div class="lc-lbl">CAN Bus</div><div class="lc-val" id="eps-lc-can" style="font-size:0.7rem;">OFFLINE</div></div>
+          <div class="lc"><div class="lc-lbl">PSCM</div><div class="lc-val" id="eps-lc-pscm" style="font-size:0.7rem;">OFFLINE</div></div>
+          <div class="lc"><div class="lc-lbl">Motor</div><div class="lc-val" id="eps-lc-motor" style="font-size:0.7rem;">IDLE</div></div>
+        </div>
+      </div>
+
+      <!-- DIRECTION CONTROL -->
+      <div class="card">
+        <div class="card-hd">Direction Control</div>
+        <div class="dir-grid" style="margin-bottom:10px;">
+          <button class="dir-card" id="eps-btn-left" onclick="epsSetDir('LEFT')" disabled>
+            <div class="dir-ico">◄</div>LEFT
+          </button>
+          <button class="dir-card active-center" id="eps-btn-center" onclick="epsSetDir('CENTER')" disabled>
+            <div class="dir-ico">●</div>CENTER
+          </button>
+          <button class="dir-card" id="eps-btn-right" onclick="epsSetDir('RIGHT')" disabled>
+            <div class="dir-ico">►</div>RIGHT
+          </button>
+        </div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:var(--text-dim);margin-bottom:10px;">Assist Level</div>
+        <div class="assist-wrap">
+          <div class="assist-row">
+            <span class="assist-lbl">0%</span>
+            <input type="range" class="assist-inp" id="eps-assist" min="0" max="100" value="50"
+              oninput="epsAssist(this.value)" disabled>
+            <span class="assist-lbl">100%</span>
+          </div>
+          <div class="assist-pct" id="eps-assist-pct">50%</div>
+        </div>
+      </div>
+
+      <!-- AUTOMATED TESTS -->
+      <div class="card">
+        <div class="card-hd">Automated Tests</div>
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <button class="btn b" id="eps-sweep-btn" style="width:100%;text-align:left;" onclick="epsSweep()" disabled>↔ FULL LOCK-TO-LOCK SWEEP</button>
+          <button class="btn p" id="eps-ping-btn" style="width:100%;text-align:left;" onclick="epsCmd('EPS:PING')" disabled>◎ PING PSCM</button>
+          <button class="btn" id="eps-status-btn" style="width:100%;text-align:left;" onclick="epsCmd('EPS:STATUS')" disabled>ℹ REQUEST STATUS</button>
+        </div>
+      </div>
+
+      <!-- WIRING REFERENCE -->
+      <div class="card">
+        <div class="card-hd">Wiring Reference — F150 PSCM</div>
+        <div class="wire-table">
+          <div class="wire-row"><div class="wire-dot" style="background:#ffcc00;"></div><span class="wire-pin">C1463A·2</span><span class="wire-desc">VBATT YEL/RED → Batt+ 125A fuse</span></div>
+          <div class="wire-row"><div class="wire-dot" style="background:#444;border:1px solid #888;"></div><span class="wire-pin">C1463A·1</span><span class="wire-desc">GND BLK/VIO → Battery negative</span></div>
+          <div class="wire-row"><div class="wire-dot" style="background:#888;"></div><span class="wire-pin">C1463B·1</span><span class="wire-desc">VPWR GRY/ORG → Supply+ 10A fuse</span></div>
+          <div class="wire-row"><div class="wire-dot" style="background:#00cc44;"></div><span class="wire-pin">C1463B·2</span><span class="wire-desc">HS2CAN+ GRN/ORG → MCP2515 CANH</span></div>
+          <div class="wire-row"><div class="wire-dot" style="background:#0088ff;"></div><span class="wire-pin">C1463B·3</span><span class="wire-desc">HS2CAN− GRY/BLU → MCP2515 CANL</span></div>
+          <div class="wire-row"><div class="wire-dot" style="background:#ff8800;"></div><span class="wire-pin">TERM</span><span class="wire-desc">120Ω resistor between CANH and CANL</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+
+      <!-- RACK POSITION VISUAL -->
+      <div class="card">
+        <div class="card-hd">Rack Position</div>
+        <div class="rack-track-wrap">
+          <div class="rack-road">
+            <div class="rack-puck" id="eps-puck" style="left:50%;"></div>
+          </div>
+          <div class="rack-ends">
+            <span>◄◄ FULL LEFT</span>
+            <span>CENTER</span>
+            <span>FULL RIGHT ►►</span>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:center;margin-top:10px;">
+          <div style="font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:900;color:#ff6b9d;" id="eps-dir-display">● CENTER</div>
+        </div>
+      </div>
+
+      <!-- LIVE DATA -->
+      <div class="card">
+        <div class="card-hd">Live Data</div>
+        <div class="live-grid">
+          <div class="lc"><div class="lc-lbl">Direction</div><div class="lc-val good" id="eps-ld-dir">CENTER</div></div>
+          <div class="lc"><div class="lc-lbl">Assist %</div><div class="lc-val" id="eps-ld-assist" style="color:#ff6b9d;">50%</div></div>
+          <div class="lc"><div class="lc-lbl">PSCM Status</div><div class="lc-val warn" id="eps-ld-status">WAITING</div></div>
+          <div class="lc"><div class="lc-lbl">Last Fault</div><div class="lc-val good" id="eps-ld-fault">NONE</div></div>
+          <div class="lc"><div class="lc-lbl">CAN Frames</div><div class="lc-val" id="eps-ld-frames" style="color:var(--blue);">0</div></div>
+          <div class="lc"><div class="lc-lbl">Session</div><div class="lc-val" id="eps-ld-session" style="color:var(--text-dim);">STOPPED</div></div>
+        </div>
+      </div>
+
+      <!-- CAN BUS MONITOR -->
+      <div class="card" style="flex:1;">
+        <div class="card-hd">CAN Bus Monitor
+          <div class="hd-btns">
+            <button class="btn" onclick="epsCanClear()">CLEAR</button>
+          </div>
+        </div>
+        <div class="can-stream" id="eps-can-stream">
+          <div class="can-idle-msg">Waiting for CAN activity...</div>
+        </div>
+      </div>
+
+      <!-- SESSION LOG -->
+      <div class="card" style="flex:1;">
+        <div class="card-hd">Session Log
+          <div class="hd-btns">
+            <button class="btn" onclick="document.getElementById('eps-log').innerHTML=''">CLEAR</button>
+          </div>
+        </div>
+        <div class="log-box" id="eps-log"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <!-- ══════════ EEPROM TAB ══════════ -->
 <div class="mod-page" id="page-eeprom">
   <div class="s-banner" id="eeprom-banner">
@@ -559,6 +741,7 @@ var MOD_INFO = {
   bcm:    { mod:'BCM',                id:'0x0540' },
   tcm:    { mod:'TCM',                id:'0x0700' },
   eeprom: { mod:'EEPROM Reader', id:'ZIF Socket' },
+  eps:    { mod:'EPS / Power Steering', id:'HS-CAN2 500k' },
 };
 
 var DTC_DB = {
@@ -778,6 +961,7 @@ function startReadLoop(){
   })();
 }
 function handleRx(line){
+  if(line.startsWith('EPS:')){ handleEpsRx(line); epsAddCanFrame(line,'rx'); return; }
   var cls='info';
   if(line==='PONG'){cls='ok';line='PONG — Arduino alive ✓';}
   else if(line.startsWith('OK:'))cls='ok';
@@ -1292,7 +1476,249 @@ async function writeOdoToChip() {
   log('Write complete','ok');
 }
 
-function autoDecodeVIN(bytes, model) {
+// ═══════════════════════════════════════════════════
+// EPS / POWER STEERING FUNCTIONS
+// ═══════════════════════════════════════════════════
+var epsActive   = false;
+var epsCurrentDir = 'CENTER';
+var epsAssistPct= 50;
+var epsFrameCount = 0;
+
+function epsLog(msg, cls) {
+  var box = document.getElementById('eps-log');
+  if (!box) return;
+  var d = document.createElement('div');
+  d.className = 'le';
+  var now = new Date();
+  var ts = now.toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  d.innerHTML = '<span class="ts">['+ts+']</span> <span class="l'+(cls||'info')+'">'+msg+'</span>';
+  box.appendChild(d);
+  box.scrollTop = box.scrollHeight;
+}
+
+function epsSetBanner(state, icon, ttl, sub) {
+  var b = document.getElementById('eps-banner');
+  b.className = 's-banner' + (state ? ' '+state : '');
+  document.getElementById('eps-banner-ttl').className = 'sb-ttl '+(state||'idle');
+  document.getElementById('eps-banner-ttl').textContent = ttl;
+  document.getElementById('eps-banner-sub').textContent = sub;
+  b.querySelector('.sb-ic').textContent = icon;
+}
+
+function epsSetLiveCell(id, val, cls) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = val;
+  el.className = 'lc-val' + (cls ? ' '+cls : '');
+}
+
+function epsEnableControls(on) {
+  ['eps-btn-left','eps-btn-center','eps-btn-right',
+   'eps-sweep-btn','eps-ping-btn','eps-status-btn','eps-assist'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.disabled = !on;
+  });
+  document.getElementById('eps-start-btn').disabled = on;
+  document.getElementById('eps-stop-btn').disabled  = !on;
+}
+
+function epsStart() {
+  epsActive = true;
+  epsEnableControls(true);
+  epsSetBanner('run','🔩','INITIALIZING PSCM','Sending CAN keep-alive frames. Waiting for PSCM response...');
+  epsSetLiveCell('eps-ld-session','RUNNING','good');
+  epsLog('Session started — sending CAN keep-alive frames','ok');
+  if(connected) sendCmd('EPS:START');
+  else epsLog('Arduino not connected — commands will be queued','warn');
+}
+
+function epsStop() {
+  epsActive = false;
+  epsEnableControls(false);
+  epsCurrentDir = 'CENTER';
+  epsUpdateRack('CENTER');
+  epsSetBanner('','🔩','EPS — ELECTRIC POWER STEERING','2018 Ford F150 PSCM. Connect Arduino CAN chip to HS2CAN+/HS2CAN-.');
+  epsSetLiveCell('eps-lc-can','OFFLINE','bad');
+  epsSetLiveCell('eps-lc-pscm','OFFLINE','bad');
+  epsSetLiveCell('eps-lc-motor','IDLE','');
+  epsSetLiveCell('eps-ld-session','STOPPED','');
+  if(connected) sendCmd('EPS:STOP');
+  epsLog('Session stopped','warn');
+}
+
+function epsSetDir(dir) {
+  if(!epsActive) return;
+  epsCurrentDir = dir;
+  epsUpdateRack(dir);
+  epsSetLiveCell('eps-ld-dir', dir==='LEFT'?'◄ LEFT':dir==='RIGHT'?'RIGHT ►':'● CENTER',
+    dir==='LEFT'?'warn':dir==='RIGHT'?'good':'good');
+  if(connected) sendCmd('EPS:'+dir);
+  epsLog('Direction: '+dir,'info');
+  // Update direction button states
+  ['left','center','right'].forEach(function(d){
+    var btn = document.getElementById('eps-btn-'+d);
+    if(!btn) return;
+    btn.className = 'dir-card'+(dir.toLowerCase()===d?' active-'+d:'');
+  });
+}
+
+function epsUpdateRack(dir) {
+  var puck = document.getElementById('eps-puck');
+  var disp = document.getElementById('eps-dir-display');
+  if(dir==='LEFT'){
+    puck.style.left = '12%';
+    puck.className  = 'rack-puck left';
+    disp.style.color = 'var(--blue)';
+    disp.textContent = '◄ LEFT';
+  } else if(dir==='RIGHT'){
+    puck.style.left = '88%';
+    puck.className  = 'rack-puck right';
+    disp.style.color = 'var(--green)';
+    disp.textContent = 'RIGHT ►';
+  } else {
+    puck.style.left = '50%';
+    puck.className  = 'rack-puck';
+    disp.style.color = '#ff6b9d';
+    disp.textContent = '● CENTER';
+  }
+}
+
+function epsAssist(val) {
+  epsAssistPct = parseInt(val);
+  document.getElementById('eps-assist-pct').textContent = val+'%';
+  document.getElementById('eps-ld-assist').textContent  = val+'%';
+  if(connected && epsActive) sendCmd('EPS:LEVEL:'+val);
+}
+
+function epsSweep() {
+  if(!epsActive) return;
+  epsSetBanner('run','🔩','SWEEP IN PROGRESS','Running full lock-to-lock sweep test...');
+  epsLog('Lock-to-lock sweep started','info');
+  if(connected){ sendCmd('EPS:SWEEP'); return; }
+  // Simulate sweep visually if not connected
+  epsSetDir("LEFT");
+  setTimeout(function(){ epsSetDir("CENTER"); }, 3000);
+  setTimeout(function(){ epsSetDir("RIGHT"); }, 4000);
+  setTimeout(function(){
+    epsSetDir("CENTER");
+    epsSetBanner('pass','✅','SWEEP COMPLETE','Lock-to-lock sweep finished successfully.');
+    epsLog('Sweep complete','ok');
+  }, 7000);
+}
+
+function epsCmd(cmd) {
+  if(!epsActive) return;
+  if(connected) sendCmd(cmd);
+  epsLog('TX: '+cmd,'info');
+}
+
+function epsCanClear() {
+  var s = document.getElementById('eps-can-stream');
+  s.innerHTML = '<div class="can-idle-msg">Cleared.</div>';
+  epsFrameCount = 0;
+  document.getElementById('eps-ld-frames').textContent = '0';
+}
+
+function epsAddCanFrame(text, type) {
+  var s = document.getElementById('eps-can-stream');
+  var idle = s.querySelector('.can-idle-msg');
+  if(idle) idle.remove();
+  var f = document.createElement('div');
+  f.className = type==='rx' ? 'can-frame-rx' : 'can-frame-tx';
+  var now = new Date();
+  var ts = now.toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  f.textContent = '['+ts+'] '+(type==='rx'?'RX':'TX')+' '+text;
+  s.appendChild(f);
+  if(s.children.length > 60) s.removeChild(s.firstChild);
+  s.scrollTop = s.scrollHeight;
+  epsFrameCount++;
+  document.getElementById('eps-ld-frames').textContent = epsFrameCount;
+}
+
+// ─── EPS RESPONSE HANDLER ────────────────────────
+// Called from handleRx() when line starts with EPS:
+function handleEpsRx(line) {
+  if(line === 'EPS:STARTED') {
+    epsSetLiveCell('eps-lc-can','ONLINE','good');
+    epsSetBanner('run','🔩','PSCM SESSION ACTIVE','CAN initialized at 500kbps. Keep-alive frames transmitting.');
+    epsLog('CAN bus online — 500kbps','ok');
+  }
+  else if(line === 'EPS:CAN_OK') {
+    epsSetLiveCell('eps-lc-can','ONLINE','good');
+    epsLog('CAN initialized OK','ok');
+  }
+  else if(line === 'EPS:CAN_ERROR') {
+    epsSetLiveCell('eps-lc-can','ERROR','bad');
+    epsSetBanner('fail','❌','CAN INIT FAILED','Check MCP2515 wiring — CS pin 53, MOSI 51, MISO 50, SCK 52.');
+    epsLog('CAN init failed — check MCP2515','err');
+  }
+  else if(line === 'EPS:PSCM_ONLINE') {
+    epsSetLiveCell('eps-lc-pscm','ONLINE','good');
+    epsSetLiveCell('eps-ld-status','ONLINE','good');
+    epsSetBanner('pass','✅','PSCM RESPONDING','Module is alive on CAN bus. Direction commands active.');
+    epsLog('PSCM online — module responding','ok');
+  }
+  else if(line === 'EPS:PSCM_OFFLINE' || line === 'EPS:PSCM_LOST') {
+    epsSetLiveCell('eps-lc-pscm','OFFLINE','bad');
+    epsSetLiveCell('eps-ld-status','LOST','bad');
+    epsLog('PSCM lost — check power and CAN wiring','err');
+  }
+  else if(line === 'EPS:MOVING_LEFT') {
+    epsUpdateRack('LEFT');
+    epsSetLiveCell('eps-lc-motor','ACTIVE','good');
+    epsSetLiveCell('eps-ld-dir','◄ LEFT','warn');
+    epsLog('Rack moving LEFT','info');
+  }
+  else if(line === 'EPS:MOVING_RIGHT') {
+    epsUpdateRack('RIGHT');
+    epsSetLiveCell('eps-lc-motor','ACTIVE','good');
+    epsSetLiveCell('eps-ld-dir','RIGHT ►','good');
+    epsLog('Rack moving RIGHT','info');
+  }
+  else if(line === 'EPS:CENTERING') {
+    epsUpdateRack('CENTER');
+    epsSetLiveCell('eps-lc-motor','IDLE','');
+    epsSetLiveCell('eps-ld-dir','● CENTER','good');
+    epsLog('Rack returning to center','info');
+  }
+  else if(line === 'EPS:SWEEP_START') {
+    epsLog('Sweep started','info');
+  }
+  else if(line === 'EPS:SWEEP_DONE') {
+    epsUpdateRack('CENTER');
+    epsSetLiveCell('eps-lc-motor','IDLE','');
+    epsSetBanner('pass','✅','SWEEP COMPLETE','Lock-to-lock test passed.');
+    epsLog('Sweep complete','ok');
+  }
+  else if(line === 'EPS:PONG') {
+    epsLog('PSCM ping response received ✓','ok');
+  }
+  else if(line === 'EPS:STOPPED') {
+    epsLog('Session stopped','warn');
+  }
+  else if(line.startsWith('EPS:RX:')) {
+    epsAddCanFrame(line.substring(7), 'rx');
+  }
+  else if(line.startsWith('EPS:FAULT:')) {
+    var fault = line.substring(10);
+    epsSetLiveCell('eps-ld-fault', fault, 'bad');
+    epsLog('FAULT: '+fault,'err');
+  }
+  else if(line.startsWith('EPS:STATUS:')) {
+    epsLog('Status: '+line.substring(11),'info');
+  }
+  else if(line.startsWith('EPS:LEVEL_SET:')) {
+    epsLog('Assist level confirmed: '+line.substring(14)+'%','ok');
+  }
+  else if(line.startsWith('EPS:INFO:')) {
+    epsLog(line.substring(9),'info');
+  }
+  else {
+    epsLog('RX: '+line,'info');
+  }
+}
+
+
   var d = CHIP_DB[model] || CHIP_DB['93C56'];
   var tenths=0;
   if(d.odoLen===3) tenths=(bytes[d.odoOff]<<16)|(bytes[d.odoOff+1]<<8)|bytes[d.odoOff+2];
