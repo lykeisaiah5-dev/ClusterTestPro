@@ -1,0 +1,307 @@
+<!--
+================================================================
+  BENCHPRO — EPS / RACK TAB
+  Add these 4 things to your existing index.html
+================================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STEP 1 OF 4 — TAB BUTTON
+  Find this line in your header:
+      <button class="mod-tab t-tcm" ...>⚙ TCM</button>
+  Paste this line DIRECTLY AFTER IT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    <button class="mod-tab t-eps" id="tab-eps" onclick="switchMod('eps')">🔩 EPS / RACK</button>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STEP 2 OF 4 — CSS
+  Find the closing </style> tag in your <head>
+  Paste ALL of this BEFORE </style>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+.mod-tab.t-eps{border-color:#ff6b9d;color:#ff6b9d;background:rgba(255,107,157,0.08);}
+.mod-tab.t-eps.active{background:#ff6b9d;color:#000;}
+.rack-road{position:relative;height:14px;background:var(--border);border-radius:7px;margin:10px 0 4px;}
+.rack-puck{position:absolute;top:50%;transform:translate(-50%,-50%);width:20px;height:20px;border-radius:50%;background:#ff6b9d;border:2px solid var(--bg);box-shadow:0 0 8px rgba(255,107,157,0.5);transition:left 0.3s ease;}
+.rack-puck.left{background:var(--blue);box-shadow:0 0 8px rgba(26,180,255,0.5);}
+.rack-puck.right{background:var(--green);box-shadow:0 0 8px rgba(26,255,140,0.5);}
+.rack-ends{display:flex;justify-content:space-between;font-family:'Share Tech Mono',monospace;font-size:0.48rem;color:var(--text-dim);}
+.eps-dir-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:10px;}
+.eps-dir-btn{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:10px 5px;text-align:center;cursor:pointer;transition:all 0.2s;font-family:'Orbitron',monospace;font-size:0.48rem;font-weight:700;letter-spacing:0.08em;color:var(--text-dim);}
+.eps-dir-btn:hover:not(:disabled){border-color:#ff6b9d;color:#ff6b9d;}
+.eps-dir-btn.dl{border-color:var(--blue);background:var(--glow-blue);color:var(--blue);}
+.eps-dir-btn.dc{border-color:#ff6b9d;background:rgba(255,107,157,0.08);color:#ff6b9d;}
+.eps-dir-btn.dr{border-color:var(--green);background:var(--glow-green);color:var(--green);}
+.eps-dir-btn:disabled{opacity:0.3;cursor:not-allowed;}
+.eps-can{background:#050708;border:1px solid var(--border);border-radius:4px;height:100px;overflow-y:auto;padding:5px 7px;font-family:'Share Tech Mono',monospace;font-size:0.5rem;line-height:1.7;}
+.eps-can::-webkit-scrollbar{width:3px;}.eps-can::-webkit-scrollbar-thumb{background:var(--border);}
+.eps-tx{color:var(--accent);}.eps-rx{color:var(--blue);}
+.eps-idle{color:var(--text-dim);text-align:center;padding:28px 0;}
+.eps-wire{display:flex;flex-direction:column;gap:4px;}
+.eps-wire-row{display:grid;grid-template-columns:8px 78px 1fr;gap:6px;align-items:center;font-family:'Share Tech Mono',monospace;font-size:0.5rem;}
+.eps-dot{width:8px;height:8px;border-radius:50%;}
+.eps-pin{color:var(--accent);}.eps-desc{color:var(--text-dim);}
+.eps-slider{flex:1;-webkit-appearance:none;height:3px;background:var(--border);border-radius:2px;outline:none;}
+.eps-slider::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;background:#ff6b9d;border-radius:50%;cursor:pointer;}
+.eps-slider:disabled::-webkit-slider-thumb{background:var(--border);cursor:not-allowed;}
+.eps-pct{font-family:'Orbitron',monospace;font-weight:700;font-size:0.8rem;color:#ff6b9d;text-align:center;margin-top:4px;}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STEP 3 OF 4 — PAGE HTML
+  Find this comment in your file:
+      <!-- ══════════ EEPROM TAB ══════════ -->
+  Paste ALL of this BEFORE that comment
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-->
+
+<!-- ══════════ EPS TAB ══════════ -->
+<div class="mod-page" id="page-eps">
+  <div class="s-banner" id="eps-banner">
+    <div class="sb-ic">🔩</div>
+    <div>
+      <div class="sb-ttl idle" id="eps-ttl">EPS — ELECTRIC POWER STEERING</div>
+      <div class="sb-sub" id="eps-sub">2018 Ford F150 PSCM · HS2 CAN bus · Connect MCP2515 CANH to Godiag pin 3, CANL to pin 11</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd">Session Control
+      <div class="hd-btns">
+        <button class="btn g" id="eps-start" onclick="epsStart()">▶ START</button>
+        <button class="btn r" id="eps-stop" onclick="epsStop()" disabled>■ STOP</button>
+        <button class="btn b" id="eps-sweep" onclick="epsSweep()" disabled>↔ SWEEP</button>
+        <button class="btn p" id="eps-ping" onclick="epsCmd('EPS:PING')" disabled>◎ PING</button>
+        <button class="btn" id="eps-status-btn" onclick="epsCmd('EPS:STATUS')" disabled>ℹ STATUS</button>
+      </div>
+    </div>
+    <div class="live-grid">
+      <div class="lc"><div class="lc-lbl">CAN Bus</div><div class="lc-val bad" id="eps-lc-can">OFFLINE</div></div>
+      <div class="lc"><div class="lc-lbl">PSCM</div><div class="lc-val bad" id="eps-lc-pscm">OFFLINE</div></div>
+      <div class="lc"><div class="lc-lbl">Motor</div><div class="lc-val" id="eps-lc-motor">IDLE</div></div>
+      <div class="lc"><div class="lc-lbl">Direction</div><div class="lc-val good" id="eps-lc-dir">CENTER</div></div>
+      <div class="lc"><div class="lc-lbl">Assist</div><div class="lc-val" id="eps-lc-assist" style="color:#ff6b9d;">50%</div></div>
+      <div class="lc"><div class="lc-lbl">CAN Frames</div><div class="lc-val" id="eps-lc-frames" style="color:var(--blue);">0</div></div>
+    </div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-hd">Direction Control</div>
+      <div class="eps-dir-grid">
+        <button class="eps-dir-btn" id="eps-dl" onclick="epsSetDir('LEFT')" disabled>
+          <div style="font-size:1rem;margin-bottom:3px;">◄</div>LEFT
+        </button>
+        <button class="eps-dir-btn dc" id="eps-dc" onclick="epsSetDir('CENTER')" disabled>
+          <div style="font-size:1rem;margin-bottom:3px;">●</div>CENTER
+        </button>
+        <button class="eps-dir-btn" id="eps-dr" onclick="epsSetDir('RIGHT')" disabled>
+          <div style="font-size:1rem;margin-bottom:3px;">►</div>RIGHT
+        </button>
+      </div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:var(--text-dim);margin-bottom:6px;">Assist Level</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-family:'Share Tech Mono',monospace;font-size:0.48rem;color:var(--text-dim);">0%</span>
+        <input type="range" class="eps-slider" id="eps-assist-inp" min="0" max="100" value="50" oninput="epsAssist(this.value)" disabled>
+        <span style="font-family:'Share Tech Mono',monospace;font-size:0.48rem;color:var(--text-dim);">100%</span>
+      </div>
+      <div class="eps-pct" id="eps-pct">50%</div>
+      <div style="margin-top:14px;">
+        <div class="card-hd" style="margin-bottom:8px;">Rack Position</div>
+        <div class="rack-road">
+          <div class="rack-puck" id="eps-puck" style="left:50%;"></div>
+        </div>
+        <div class="rack-ends">
+          <span>◄◄ FULL LEFT</span>
+          <span>CENTER</span>
+          <span>FULL RIGHT ►►</span>
+        </div>
+        <div style="text-align:center;margin-top:8px;font-family:'Orbitron',monospace;font-weight:900;font-size:1rem;color:#ff6b9d;" id="eps-dir-disp">● CENTER</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd">CAN Bus Monitor
+        <div class="hd-btns">
+          <button class="btn" onclick="epsCanClear()">CLEAR</button>
+        </div>
+      </div>
+      <div class="eps-can" id="eps-can">
+        <div class="eps-idle">Waiting for CAN activity...</div>
+      </div>
+      <div style="margin-top:12px;">
+        <div class="card-hd" style="margin-bottom:8px;">Session Log
+          <div class="hd-btns">
+            <button class="btn" onclick="document.getElementById('eps-log').innerHTML=''">CLEAR</button>
+          </div>
+        </div>
+        <div class="log-box" id="eps-log"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd">Wiring Reference — 2018 F150 PSCM</div>
+    <div class="eps-wire">
+      <div class="eps-wire-row"><div class="eps-dot" style="background:#ffcc00;"></div><span class="eps-pin">C1463A · 2</span><span class="eps-desc">VBATT YEL/RED → Battery+ through 125A fuse</span></div>
+      <div class="eps-wire-row"><div class="eps-dot" style="background:#333;border:1px solid #666;"></div><span class="eps-pin">C1463A · 1</span><span class="eps-desc">GND BLK/VIO → Battery negative / Godiag pin 4</span></div>
+      <div class="eps-wire-row"><div class="eps-dot" style="background:#999;"></div><span class="eps-pin">C1463B · 1</span><span class="eps-desc">VPWR GRY/ORG → Bench supply 12V / Godiag pin 16</span></div>
+      <div class="eps-wire-row"><div class="eps-dot" style="background:#00cc44;"></div><span class="eps-pin">C1463B · 2</span><span class="eps-desc">HS2CAN+ GRN/ORG → MCP2515 CANH / Godiag pin 3</span></div>
+      <div class="eps-wire-row"><div class="eps-dot" style="background:#1ab4ff;"></div><span class="eps-pin">C1463B · 3</span><span class="eps-desc">HS2CAN− GRY/BLU → MCP2515 CANL / Godiag pin 11</span></div>
+      <div class="eps-wire-row"><div class="eps-dot" style="background:#ff8800;"></div><span class="eps-pin">TERM</span><span class="eps-desc">120Ω on MCP2515 between CANH and CANL</span></div>
+    </div>
+  </div>
+</div>
+
+<!--
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STEP 4 OF 4 — TWO JAVASCRIPT CHANGES
+
+  CHANGE A: Find this in your MOD_INFO object:
+      eeprom: { mod:'EEPROM Reader', id:'ZIF Socket' },
+  Add this line AFTER it:
+      eps:    { mod:'EPS / Power Steering', id:'HS2-CAN 500k' },
+
+  CHANGE B: Find this in your handleRx function:
+      function handleRx(line){
+        var cls='info';
+  Replace those two lines with:
+      function handleRx(line){
+        if(line.startsWith('EPS:')){ handleEpsRx(line); return; }
+        var cls='info';
+
+  CHANGE C: Find the closing </script> tag at the bottom
+  Paste ALL the JavaScript below BEFORE </script>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-->
+
+<script>
+// ═══════════════════════════════════════════════════
+// EPS / POWER STEERING — 2018 Ford F150 PSCM
+// HS2 CAN · Confirmed IDs: 0x082 0x085 0x3CC
+// ═══════════════════════════════════════════════════
+var epsActive=false,epsCurrentDir='CENTER',epsFrameCount=0;
+
+function epsLog(msg,cls){
+  var b=document.getElementById('eps-log');if(!b)return;
+  var d=document.createElement('div');d.className='le';
+  var ts=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  d.innerHTML='<span class="ts">['+ts+']</span> <span class="l'+(cls||'info')+'">'+msg+'</span>';
+  b.appendChild(d);b.scrollTop=b.scrollHeight;
+}
+function epsLc(id,val,cls){
+  var el=document.getElementById(id);if(!el)return;
+  el.textContent=val;el.className='lc-val'+(cls?' '+cls:'');
+}
+function epsBanner(state,icon,ttl,sub){
+  var b=document.getElementById('eps-banner');if(!b)return;
+  b.className='s-banner'+(state?' '+state:'');
+  var t=document.getElementById('eps-ttl');if(t){t.className='sb-ttl '+(state||'idle');t.textContent=ttl;}
+  var s=document.getElementById('eps-sub');if(s)s.textContent=sub;
+  var ic=b.querySelector('.sb-ic');if(ic)ic.textContent=icon;
+}
+function epsControls(on){
+  ['eps-dl','eps-dc','eps-dr','eps-sweep','eps-ping','eps-status-btn','eps-assist-inp'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.disabled=!on;
+  });
+  var st=document.getElementById('eps-start');if(st)st.disabled=on;
+  var sp=document.getElementById('eps-stop');if(sp)sp.disabled=!on;
+}
+function epsStart(){
+  epsActive=true;epsControls(true);
+  epsBanner('run','🔩','PSCM SESSION ACTIVE','Arduino sending HS2 CAN frames. IDs: 0x082 0x415 0x411 0x3CC 0x091');
+  epsLc('eps-lc-can','INIT','warn');
+  epsLog('Session started','ok');
+  if(connected)sendCmd('EPS:START');
+  else epsLog('Arduino not connected via Web Serial','warn');
+}
+function epsStop(){
+  epsActive=false;epsControls(false);epsCurrentDir='CENTER';epsRack('CENTER');
+  epsBanner('','🔩','EPS — ELECTRIC POWER STEERING','2018 Ford F150 PSCM · HS2 CAN · Godiag pins 3 and 11');
+  epsLc('eps-lc-can','OFFLINE','bad');epsLc('eps-lc-pscm','OFFLINE','bad');
+  epsLc('eps-lc-motor','IDLE','');epsLc('eps-lc-dir','CENTER','good');
+  if(connected)sendCmd('EPS:STOP');
+  epsLog('Session stopped','warn');
+}
+function epsSetDir(dir){
+  if(!epsActive)return;
+  epsCurrentDir=dir;epsRack(dir);
+  epsLc('eps-lc-dir',dir==='LEFT'?'◄ LEFT':dir==='RIGHT'?'RIGHT ►':'● CENTER',dir==='LEFT'?'warn':dir==='RIGHT'?'good':'good');
+  if(connected)sendCmd('EPS:'+dir);
+  epsLog('Direction: '+dir,'info');
+  var dl=document.getElementById('eps-dl');if(dl)dl.className='eps-dir-btn'+(dir==='LEFT'?' dl':'');
+  var dc=document.getElementById('eps-dc');if(dc)dc.className='eps-dir-btn'+(dir==='CENTER'?' dc':'');
+  var dr=document.getElementById('eps-dr');if(dr)dr.className='eps-dir-btn'+(dir==='RIGHT'?' dr':'');
+}
+function epsRack(dir){
+  var p=document.getElementById('eps-puck'),d=document.getElementById('eps-dir-disp');
+  if(!p||!d)return;
+  if(dir==='LEFT'){p.style.left='10%';p.className='rack-puck left';d.style.color='var(--blue)';d.textContent='◄ LEFT';}
+  else if(dir==='RIGHT'){p.style.left='90%';p.className='rack-puck right';d.style.color='var(--green)';d.textContent='RIGHT ►';}
+  else{p.style.left='50%';p.className='rack-puck';d.style.color='#ff6b9d';d.textContent='● CENTER';}
+}
+function epsAssist(val){
+  var pct=document.getElementById('eps-pct');if(pct)pct.textContent=val+'%';
+  epsLc('eps-lc-assist',val+'%','');
+  if(connected&&epsActive)sendCmd('EPS:LEVEL:'+val);
+}
+function epsSweep(){
+  if(!epsActive)return;
+  epsBanner('run','🔩','SWEEP IN PROGRESS','Running full lock-to-lock sweep...');
+  epsLog('Sweep started','info');
+  if(connected){sendCmd('EPS:SWEEP');return;}
+  epsSetDir('LEFT');
+  setTimeout(function(){epsSetDir('CENTER');},3000);
+  setTimeout(function(){epsSetDir('RIGHT');},4200);
+  setTimeout(function(){epsSetDir('CENTER');epsBanner('pass','✅','SWEEP COMPLETE','Lock-to-lock test finished.');epsLog('Sweep complete','ok');},7200);
+}
+function epsCmd(cmd){
+  if(!epsActive)return;
+  if(connected)sendCmd(cmd);
+  epsLog('TX: '+cmd,'info');
+}
+function epsCanClear(){
+  var s=document.getElementById('eps-can');if(!s)return;
+  s.innerHTML='<div class="eps-idle">Cleared.</div>';
+  epsFrameCount=0;epsLc('eps-lc-frames','0','');
+}
+function epsCanFrame(text,type){
+  var s=document.getElementById('eps-can');if(!s)return;
+  var idle=s.querySelector('.eps-idle');if(idle)idle.remove();
+  var f=document.createElement('div');
+  f.className=type==='rx'?'eps-rx':'eps-tx';
+  var ts=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  f.textContent='['+ts+'] '+(type==='rx'?'RX':'TX')+' '+text;
+  s.appendChild(f);if(s.children.length>60)s.removeChild(s.firstChild);
+  s.scrollTop=s.scrollHeight;
+  epsFrameCount++;
+  var fc=document.getElementById('eps-lc-frames');if(fc)fc.textContent=epsFrameCount;
+}
+function handleEpsRx(line){
+  epsCanFrame(line,'rx');
+  if(line==='EPS:STARTED'||line==='EPS:CAN_OK'){
+    epsLc('eps-lc-can','ONLINE','good');
+    epsBanner('run','🔩','HS2 CAN ACTIVE','Transmitting on 0x082 0x415 0x411 0x3CC 0x091. PSCM keep-alive running.');
+    epsLog('CAN bus online at 500kbps','ok');
+  }
+  else if(line==='EPS:CAN_ERROR'){
+    epsLc('eps-lc-can','ERROR','bad');
+    epsBanner('fail','❌','CAN INIT FAILED','Check MCP2515 — CS 53, MOSI 51, MISO 50, SCK 52, INT 2.');
+    epsLog('CAN init failed','err');
+  }
+  else if(line==='EPS:PSCM_ONLINE'){
+    epsLc('eps-lc-pscm','ONLINE','good');
+    epsBanner('pass','✅','PSCM RESPONDING','Module alive on HS2 CAN. Broadcasting on 0x085 and 0x082. Ready.');
+    epsLog('PSCM online','ok');
+  }
+  else if(line==='EPS:PSCM_OFFLINE'||line==='EPS:PSCM_LOST'){
+    epsLc('eps-lc-pscm','OFFLINE','bad');
+    epsLog('PSCM lost — check VBATT VPWR and CAN wiring','err');
+  }
+  else if(line==='EPS:MOVING_LEFT'){epsRack('LEFT');epsLc('eps-lc-motor','ACTIVE','good');epsLc('eps-lc-dir','◄ LEFT','warn');epsLog('Rack moving LEFT','info');}
+  else if(line==='EPS:MOVING_RIGHT'){epsRack('RIGHT');epsLc('eps-lc-motor','ACTIVE','good');epsLc('eps-lc-dir','RIGHT ►','good');epsLog('Rack moving RIGHT','info');}
+  else if(line==='EPS:CENTERING'){epsRack('CENTER');epsLc('eps-lc-motor','IDLE','');epsLc('eps-lc-dir','CENTER','good');epsLog('Rack centering','info');}
+  else if(line==='EPS:SWEEP_DONE'){epsRack('CENTER');epsLc('eps-lc-motor','IDLE','');epsBanner('pass','✅','SWEEP COMPLETE','Lock-to-lock test passed.');epsLog('Sweep complete','ok');}
+  else if(line==='EPS:PONG'){epsLog('PSCM ping received ✓','ok');}
+  else if(line==='EPS:STOPPED'){epsLog('Session stopped','warn');}
+  else if(line.startsWith('EPS:FAULT:')){epsLc('eps-lc-pscm',line.substring(10),'bad');epsLog('FAULT: '+line.substring(10),'err');}
+  else if(line.startsWith('EPS:STATUS:')){epsLog('Status: '+line.substring(11),'info');}
+  else if(line.startsWith('EPS:RX:')){epsCanFrame(line.substring(7),'rx');}
+  else{epsLog(line,'info');}
+}
+</script>
