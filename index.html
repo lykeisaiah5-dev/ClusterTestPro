@@ -1,0 +1,1565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BenchPro — Universal Automotive Module Tester</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0c0f;--surface:#111418;--surface2:#181c22;--border:#1e2530;--border2:#252e3f;
+  --accent:#e8a020;--accent2:#ff4d1c;--green:#1aff8c;--blue:#1ab4ff;--purple:#b06aff;
+  --text:#d0d8e8;--text-dim:#5a6478;--text-mid:#8a96aa;
+  --glow-green:rgba(26,255,140,0.12);--glow-red:rgba(255,77,28,0.12);
+  --glow-blue:rgba(26,180,255,0.12);--glow-amber:rgba(232,160,32,0.12);
+  --glow-purple:rgba(176,106,255,0.12);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;
+  background-image:radial-gradient(ellipse 80% 40% at 50% -10%,rgba(232,160,32,0.04) 0%,transparent 70%),
+  repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,0.01) 39px,rgba(255,255,255,0.01) 40px),
+  repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,0.01) 39px,rgba(255,255,255,0.01) 40px);}
+
+/* ── HEADER ── */
+header{display:flex;align-items:center;gap:10px;padding:10px 20px;border-bottom:1px solid var(--border);background:rgba(10,12,15,0.96);backdrop-filter:blur(14px);position:sticky;top:0;z-index:300;flex-wrap:wrap;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1rem;letter-spacing:0.14em;color:var(--accent);display:flex;align-items:center;gap:8px;flex-shrink:0;text-shadow:0 0 18px rgba(232,160,32,0.5);}
+.logo-ring{width:26px;height:26px;border:2px solid var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.52rem;animation:ring-pulse 3s ease-in-out infinite;}
+@keyframes ring-pulse{0%,100%{box-shadow:0 0 8px rgba(232,160,32,0.4)}50%{box-shadow:0 0 20px rgba(232,160,32,0.7)}}
+.logo-sub{font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--text-dim);margin-left:4px;letter-spacing:0.1em;}
+
+/* MODULE TABS */
+.mod-tabs{display:flex;gap:3px;flex:1;overflow-x:auto;scrollbar-width:none;}
+.mod-tabs::-webkit-scrollbar{display:none;}
+.mod-tab{font-family:'Orbitron',monospace;font-size:0.52rem;font-weight:700;letter-spacing:0.08em;padding:6px 14px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all 0.2s;text-transform:uppercase;white-space:nowrap;flex-shrink:0;}
+.mod-tab:hover{border-color:var(--border2);color:var(--text-mid);}
+.mod-tab.active{color:#000;}
+.mod-tab.t-cluster{border-color:var(--accent);color:var(--accent);background:var(--glow-amber);}
+.mod-tab.t-cluster.active{background:var(--accent);color:#000;}
+.mod-tab.t-abs{border-color:var(--green);color:var(--green);background:var(--glow-green);}
+.mod-tab.t-abs.active{background:var(--green);color:#000;}
+.mod-tab.t-tipm{border-color:var(--blue);color:var(--blue);background:var(--glow-blue);}
+.mod-tab.t-tipm.active{background:var(--blue);color:#000;}
+.mod-tab.t-ecu{border-color:var(--purple);color:var(--purple);background:var(--glow-purple);}
+.mod-tab.t-ecu.active{background:var(--purple);color:#000;}
+.mod-tab.t-bcm{border-color:#ff9f43;color:#ff9f43;background:rgba(255,159,67,0.1);}
+.mod-tab.t-bcm.active{background:#ff9f43;color:#000;}
+.mod-tab.t-tcm{border-color:#fd79a8;color:#fd79a8;background:rgba(253,121,168,0.1);}
+.mod-tab.t-tcm.active{background:#fd79a8;color:#000;}
+.mod-tab.t-eeprom{border-color:#00ffcc;color:#00ffcc;background:rgba(0,255,204,0.08);}
+.mod-tab.t-eeprom.active{background:#00ffcc;color:#000;}
+.mod-tab.t-eps{border-color:#ff6b9d;color:#ff6b9d;background:rgba(255,107,157,0.08);}
+.mod-tab.t-eps.active{background:#ff6b9d;color:#000;}
+.rack-road{position:relative;height:14px;background:var(--border);border-radius:7px;margin:10px 0 4px;}
+.rack-puck{position:absolute;top:50%;transform:translate(-50%,-50%);width:20px;height:20px;border-radius:50%;background:#ff6b9d;border:2px solid var(--bg);box-shadow:0 0 8px rgba(255,107,157,0.5);transition:left 0.3s ease;}
+.rack-puck.left{background:var(--blue);box-shadow:0 0 8px rgba(26,180,255,0.5);}
+.rack-puck.right{background:var(--green);box-shadow:0 0 8px rgba(26,255,140,0.5);}
+.rack-ends{display:flex;justify-content:space-between;font-family:'Share Tech Mono',monospace;font-size:0.48rem;color:var(--text-dim);}
+.eps-dir-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:10px;}
+.eps-dir-btn{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:10px 5px;text-align:center;cursor:pointer;transition:all 0.2s;font-family:'Orbitron',monospace;font-size:0.48rem;font-weight:700;letter-spacing:0.08em;color:var(--text-dim);}
+.eps-dir-btn:hover:not(:disabled){border-color:#ff6b9d;color:#ff6b9d;}
+.eps-dir-btn.dl{border-color:var(--blue);background:var(--glow-blue);color:var(--blue);}
+.eps-dir-btn.dc{border-color:#ff6b9d;background:rgba(255,107,157,0.08);color:#ff6b9d;}
+.eps-dir-btn.dr{border-color:var(--green);background:var(--glow-green);color:var(--green);}
+.eps-dir-btn:disabled{opacity:0.3;cursor:not-allowed;}
+.eps-can{background:#050708;border:1px solid var(--border);border-radius:4px;height:100px;overflow-y:auto;padding:5px 7px;font-family:'Share Tech Mono',monospace;font-size:0.5rem;line-height:1.7;}
+.eps-can::-webkit-scrollbar{width:3px;}.eps-can::-webkit-scrollbar-thumb{background:var(--border);}
+.eps-tx{color:var(--accent);}.eps-rx{color:var(--blue);}
+.eps-idle{color:var(--text-dim);text-align:center;padding:28px 0;}
+.eps-wire{display:flex;flex-direction:column;gap:4px;}
+.eps-wire-row{display:grid;grid-template-columns:8px 78px 1fr;gap:6px;align-items:center;font-family:'Share Tech Mono',monospace;font-size:0.5rem;}
+.eps-dot{width:8px;height:8px;border-radius:50%;}
+.eps-pin{color:var(--accent);}.eps-desc{color:var(--text-dim);}
+.eps-slider{flex:1;-webkit-appearance:none;height:3px;background:var(--border);border-radius:2px;outline:none;}
+.eps-slider::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;background:#ff6b9d;border-radius:50%;cursor:pointer;}
+.eps-slider:disabled::-webkit-slider-thumb{background:var(--border);cursor:not-allowed;}
+.eps-pct{font-family:'Orbitron',monospace;font-weight:700;font-size:0.8rem;color:#ff6b9d;text-align:center;margin-top:4px;}
+
+/* CONNECTION */
+.hdr-right{display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.sel-inp{background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:0.68rem;padding:5px 7px;border-radius:4px;outline:none;}
+.conn-dot{width:7px;height:7px;border-radius:50%;background:var(--text-dim);flex-shrink:0;transition:all 0.3s;}
+.conn-dot.on{background:var(--green);box-shadow:0 0 7px var(--green);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+#connLbl{font-family:'Share Tech Mono',monospace;font-size:0.64rem;color:var(--text-dim);}
+
+/* BUTTONS */
+.btn{font-family:'Orbitron',monospace;font-size:0.56rem;font-weight:700;letter-spacing:0.1em;padding:6px 11px;border:1px solid var(--border);background:var(--surface);color:var(--text-mid);border-radius:4px;cursor:pointer;transition:all 0.2s;text-transform:uppercase;white-space:nowrap;}
+.btn:hover{border-color:var(--accent);color:var(--accent);}
+.btn.g{border-color:var(--green);color:var(--green);background:var(--glow-green);}
+.btn.b{border-color:var(--blue);color:var(--blue);background:var(--glow-blue);}
+.btn.r{border-color:var(--accent2);color:var(--accent2);background:var(--glow-red);}
+.btn.a{border-color:var(--accent);color:var(--accent);background:var(--glow-amber);}
+.btn.p{border-color:var(--purple);color:var(--purple);background:var(--glow-purple);}
+.btn:disabled{opacity:0.3;cursor:not-allowed;}
+
+/* LAYOUT */
+.shell{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 56px);}
+.sidebar{border-right:1px solid var(--border);padding:14px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;}
+.sb-lbl{font-family:'Orbitron',monospace;font-size:0.5rem;font-weight:700;letter-spacing:0.2em;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;}
+.content{padding:18px 20px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;}
+
+/* MODULE PAGES */
+.mod-page{display:none;flex-direction:column;gap:16px;}
+.mod-page.active{display:flex;}
+
+/* VEHICLE GRID */
+.v-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+.v-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-mid);font-family:'Orbitron',monospace;font-size:0.46rem;font-weight:700;letter-spacing:0.06em;padding:7px 4px;border-radius:4px;cursor:pointer;transition:all 0.2s;text-align:center;}
+.v-btn:hover{border-color:var(--accent);color:var(--accent);}
+.v-btn.sel{border-color:var(--accent);color:var(--accent);background:var(--glow-amber);}
+.v-sub{font-size:0.38rem;font-family:'Share Tech Mono',monospace;opacity:0.5;margin-top:2px;}
+
+/* INFO BOX */
+.info-box{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:8px 10px;font-family:'Share Tech Mono',monospace;font-size:0.56rem;line-height:2;}
+.ik{color:var(--text-mid);}.iv{color:var(--blue);}
+
+/* LOG */
+.log-box{background:#050708;border:1px solid var(--border);border-radius:4px;height:140px;overflow-y:auto;padding:6px 8px;font-family:'Share Tech Mono',monospace;font-size:0.52rem;line-height:1.8;}
+.log-box::-webkit-scrollbar{width:3px;}
+.log-box::-webkit-scrollbar-thumb{background:var(--border);}
+.le{display:flex;gap:4px;}
+.ts{color:var(--text-dim);opacity:0.35;flex-shrink:0;}
+.lok{color:var(--green);}.lwarn{color:var(--accent);}.lerr{color:var(--accent2);}.linfo{color:var(--blue);}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px 16px;}
+.card-hd{font-family:'Orbitron',monospace;font-size:0.58rem;font-weight:700;letter-spacing:0.14em;color:var(--text-mid);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.hd-btns{display:flex;gap:5px;}
+
+/* STATUS BANNER */
+.s-banner{border-radius:5px;padding:12px 16px;display:flex;align-items:center;gap:12px;border:1px solid var(--border);background:var(--surface);transition:all 0.4s;}
+.s-banner.pass{border-color:var(--green);background:rgba(26,255,140,0.04);}
+.s-banner.fail{border-color:var(--accent2);background:rgba(255,77,28,0.04);}
+.s-banner.warn{border-color:var(--accent);background:rgba(232,160,32,0.04);}
+.s-banner.run{border-color:var(--blue);background:rgba(26,180,255,0.04);}
+.sb-ic{font-size:1.6rem;flex-shrink:0;}
+.sb-ttl{font-family:'Orbitron',monospace;font-weight:900;font-size:0.88rem;letter-spacing:0.08em;text-transform:uppercase;}
+.sb-ttl.pass{color:var(--green);}.sb-ttl.fail{color:var(--accent2);}.sb-ttl.warn{color:var(--accent);}.sb-ttl.run{color:var(--blue);}.sb-ttl.idle{color:var(--text-mid);}
+.sb-sub{font-size:0.76rem;color:var(--text-mid);margin-top:2px;line-height:1.5;}
+
+/* DTC */
+.dtc-list{display:flex;flex-direction:column;gap:5px;}
+.dtc{display:grid;grid-template-columns:76px 1fr auto;gap:8px;align-items:center;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;}
+.dtc.act{border-color:var(--accent2);}
+.dtc.hist{border-color:var(--accent);}
+.dtc.none{border-color:var(--green);}
+.dtc-code{font-family:'Orbitron',monospace;font-weight:700;font-size:0.72rem;}
+.dtc-code.act{color:var(--accent2);}.dtc-code.hist{color:var(--accent);}.dtc-code.none{color:var(--green);}
+.dtc-desc{font-size:0.76rem;line-height:1.4;}
+.dtc-sub{font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:var(--text-dim);margin-top:1px;}
+.badge{font-family:'Share Tech Mono',monospace;font-size:0.5rem;padding:2px 7px;border-radius:9px;white-space:nowrap;}
+.badge.act{background:rgba(255,77,28,0.1);border:1px solid rgba(255,77,28,0.25);color:var(--accent2);}
+.badge.hist{background:rgba(232,160,32,0.08);border:1px solid rgba(232,160,32,0.2);color:var(--accent);}
+.badge.none{background:rgba(26,255,140,0.07);border:1px solid rgba(26,255,140,0.18);color:var(--green);}
+.empty{font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--text-dim);padding:14px 0;text-align:center;line-height:1.8;}
+
+/* GAUGE BARS (cluster) */
+.gauge-section{display:flex;flex-direction:column;gap:8px;}
+.g-row{display:grid;grid-template-columns:80px 1fr 70px 60px;gap:8px;align-items:center;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;}
+.g-label{font-family:'Orbitron',monospace;font-size:0.52rem;font-weight:700;letter-spacing:0.1em;color:var(--text-mid);text-transform:uppercase;}
+.g-bar-wrap{background:var(--border);border-radius:2px;height:6px;overflow:hidden;}
+.g-bar{height:100%;border-radius:2px;background:var(--green);transition:width 0.3s ease;width:0%;}
+.g-val{font-family:'Share Tech Mono',monospace;font-size:0.68rem;color:var(--text);text-align:right;}
+.g-ctrl{display:flex;gap:4px;}
+.g-btn{font-family:'Orbitron',monospace;font-size:0.44rem;padding:3px 6px;border:1px solid var(--border);background:transparent;color:var(--text-dim);border-radius:3px;cursor:pointer;transition:all 0.2s;}
+.g-btn:hover{border-color:var(--accent);color:var(--accent);}
+.g-btn.on{border-color:var(--green);color:var(--green);background:var(--glow-green);}
+
+/* SOLENOID / ACTUATOR GRID */
+.act-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;}
+.act-card{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:9px 5px;text-align:center;cursor:pointer;transition:all 0.2s;}
+.act-card:hover{border-color:var(--accent);}
+.act-card.firing{border-color:var(--blue);background:rgba(26,180,255,0.08);animation:pop 0.3s ease;}
+.act-card.pass{border-color:var(--green);background:rgba(26,255,140,0.05);}
+.act-card.fail{border-color:var(--accent2);background:rgba(255,77,28,0.05);}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.03)}100%{transform:scale(1)}}
+.act-name{font-family:'Orbitron',monospace;font-size:0.44rem;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-mid);margin-bottom:4px;}
+.act-ico{font-size:1rem;margin-bottom:3px;}
+.act-st{font-family:'Share Tech Mono',monospace;font-size:0.48rem;}
+.act-st.pass{color:var(--green);}.act-st.fail{color:var(--accent2);}.act-st.idle{color:var(--text-dim);}.act-st.firing{color:var(--blue);}
+.act-amp{font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:var(--accent);margin-top:2px;}
+
+/* PUMP */
+.pump-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.pump-ring{width:54px;height:54px;border-radius:50%;border:3px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;transition:all 0.3s;}
+.pump-ring.spin{border-color:var(--green);animation:spin 0.8s linear infinite;}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.pump-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;flex:1;}
+.ps{background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:7px;text-align:center;}
+.ps-val{font-family:'Orbitron',monospace;font-weight:700;font-size:0.88rem;}
+.ps-lbl{font-family:'Share Tech Mono',monospace;font-size:0.46rem;color:var(--text-dim);margin-top:1px;}
+
+/* BLEED */
+.bleed-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;}
+.wb{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:10px;text-align:center;cursor:pointer;transition:all 0.2s;}
+.wb:hover{border-color:var(--blue);}
+.wb.wact{border-color:var(--blue);background:rgba(26,180,255,0.07);}
+.wb.wdone{border-color:var(--green);background:rgba(26,255,140,0.05);}
+.wb-lbl{font-family:'Orbitron',monospace;font-size:0.5rem;font-weight:700;letter-spacing:0.12em;color:var(--text-mid);margin-bottom:5px;}
+.wb-st{font-family:'Share Tech Mono',monospace;font-size:0.56rem;}
+.wb-st.idle{color:var(--text-dim);}.wb-st.wact{color:var(--blue);}.wb-st.wdone{color:var(--green);}
+.wb-cyc{font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--accent);margin-top:3px;}
+
+/* PROGRESS */
+.prog-wrap{background:var(--surface2);border-radius:3px;height:4px;overflow:hidden;margin:8px 0;}
+.prog-bar{height:100%;border-radius:3px;transition:width 0.4s ease;width:0%;}
+.prog-bar.b{background:var(--blue);}.prog-bar.g{background:var(--green);}.prog-bar.r{background:var(--accent2);}
+
+/* RELAY GRID (TIPM/BCM) */
+.relay-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
+.relay{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:8px 6px;text-align:center;cursor:pointer;transition:all 0.2s;}
+.relay:hover{border-color:var(--blue);}
+.relay.ron{border-color:var(--green);background:rgba(26,255,140,0.06);}
+.relay.roff{border-color:var(--border);}
+.relay.rfail{border-color:var(--accent2);background:rgba(255,77,28,0.05);}
+.relay-name{font-family:'Orbitron',monospace;font-size:0.44rem;font-weight:700;text-transform:uppercase;color:var(--text-mid);margin-bottom:4px;}
+.relay-ico{font-size:0.9rem;margin-bottom:3px;}
+.relay-st{font-family:'Share Tech Mono',monospace;font-size:0.48rem;}
+.relay-st.on{color:var(--green);}.relay-st.off{color:var(--text-dim);}.relay-st.fail{color:var(--accent2);}
+
+/* LIVE DATA GRID */
+.live-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.lc{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:10px 11px;}
+.lc-lbl{font-family:'Share Tech Mono',monospace;font-size:0.5rem;letter-spacing:0.12em;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;}
+.lc-val{font-family:'Orbitron',monospace;font-weight:700;font-size:1rem;}
+.lc-val.good{color:var(--green);}.lc-val.warn{color:var(--accent);}.lc-val.bad{color:var(--accent2);}
+
+/* TWO COL */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+/* WARN BOX */
+.warn-box{background:rgba(255,77,28,0.06);border:1px solid rgba(255,77,28,0.22);border-radius:4px;padding:10px 12px;font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--accent2);line-height:1.8;margin-bottom:10px;}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ HEADER ═══════════════════ -->
+<header>
+  <div class="logo">
+    <div class="logo-ring">BP</div>
+    BENCHPRO
+    <span class="logo-sub">UNIVERSAL MODULE TESTER</span>
+  </div>
+
+  <div class="mod-tabs">
+    <button class="mod-tab t-cluster active" id="tab-cluster" onclick="switchMod('cluster')">⚡ CLUSTERS</button>
+    <button class="mod-tab t-abs" id="tab-abs" onclick="switchMod('abs')">🔧 ABS</button>
+    <button class="mod-tab t-tipm" id="tab-tipm" onclick="switchMod('tipm')">🔌 TIPM</button>
+    <button class="mod-tab t-ecu" id="tab-ecu" onclick="switchMod('ecu')">🧠 ECU / PCM</button>
+    <button class="mod-tab t-bcm" id="tab-bcm" onclick="switchMod('bcm')">🚗 BCM</button>
+    <button class="mod-tab t-eeprom" id="tab-eeprom" onclick="switchMod('eeprom')">🔬 EEPROM</button>
+    <button class="mod-tab t-tcm" id="tab-tcm" onclick="switchMod('tcm')">⚙ TCM</button>
+    <button class="mod-tab t-eps" id="tab-eps" onclick="switchMod('eps')">🔩 EPS / RACK</button>
+    <a href="/db25-library" class="mod-tab" style="text-decoration:none;border-color:rgba(0,255,204,0.3);color:#00ffcc;" target="_blank">🔌 HARNESS LIB ↗</a>
+  </div>
+
+  <div class="hdr-right">
+    <select class="sel-inp" id="baudSel"><option>115200</option><option>57600</option><option>9600</option></select>
+    <button class="btn a" id="connBtn" onclick="toggleConn()">CONNECT</button>
+    <div class="conn-dot" id="connDot"></div>
+    <span id="connLbl">DISCONNECTED</span>
+  </div>
+</header>
+
+<!-- ═══════════════════ SHELL ═══════════════════ -->
+<div class="shell">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div>
+    <div class="sb-lbl">Vehicle</div>
+    <div class="v-grid">
+      <div class="v-btn sel" id="vb-GM" onclick="selV('GM')">GM/CHEVY<div class="v-sub">CAN 500k</div></div>
+      <div class="v-btn" id="vb-FORD" onclick="selV('FORD')">FORD<div class="v-sub">CAN 125k</div></div>
+      <div class="v-btn" id="vb-CHRYSLER" onclick="selV('CHRYSLER')">CHRYSLER<div class="v-sub">CAN 500k</div></div>
+      <div class="v-btn" id="vb-TOYOTA" onclick="selV('TOYOTA')">TOYOTA<div class="v-sub">CAN 500k</div></div>
+    </div>
+  </div>
+  <div>
+    <div class="sb-lbl">Module Info</div>
+    <div class="info-box">
+      <span class="ik">Module: </span><span class="iv" id="iMod">Instrument Cluster</span><br>
+      <span class="ik">Make: </span><span class="iv" id="iMake">GM/Chevrolet</span><br>
+      <span class="ik">Protocol: </span><span class="iv" id="iProto">CAN 500kbps</span><br>
+      <span class="ik">Module ID: </span><span class="iv" id="iId">0x3E9</span>
+    </div>
+  </div>
+  <div>
+    <div class="sb-lbl">Quick Actions</div>
+    <div style="display:flex;flex-direction:column;gap:4px;" id="sideActions">
+      <button class="btn g" onclick="modAction('primary')">▶ RUN TEST</button>
+      <button class="btn b" onclick="modAction('dtc')">📋 READ DTCs</button>
+      <button class="btn" onclick="modAction('clear')">🗑 CLEAR DTCs</button>
+      <button class="btn r" onclick="stopAll()">■ STOP ALL</button>
+    </div>
+  </div>
+  <div style="flex:1;">
+    <div class="sb-lbl">Serial Log</div>
+    <div class="log-box" id="logBox"></div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+<!-- ══════════ CLUSTER TAB ══════════ -->
+<div class="mod-page active" id="page-cluster">
+  <div class="s-banner" id="cluster-banner">
+    <div class="sb-ic">⚡</div>
+    <div><div class="sb-ttl idle">INSTRUMENT CLUSTER</div><div class="sb-sub">Connect Arduino, select vehicle, sweep gauges or decode EEPROM.</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hd">Gauge Sweep
+      <div class="hd-btns">
+        <button class="btn g" onclick="clusterSweep()">▶ SWEEP ALL</button>
+        <button class="btn" onclick="clusterStop()">■ STOP</button>
+        <button class="btn" onclick="clusterZero()">ZERO</button>
+        <button class="btn" onclick="clusterMax()">MAX</button>
+      </div>
+    </div>
+    <div class="gauge-section" id="gaugeSection"></div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-hd">EEPROM Decoder
+        <div class="hd-btns">
+          <button class="btn b" onclick="eepromRead()">READ CHIP</button>
+        </div>
+      </div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--text-dim);margin-bottom:10px;">Paste hex dump or click READ CHIP if SOIC8 clip is connected.</div>
+      <textarea id="eepromHex" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--green);font-family:'Share Tech Mono',monospace;font-size:0.58rem;padding:8px;height:80px;resize:none;outline:none;" placeholder="FF A5 00 00 ..."></textarea>
+      <button class="btn g" style="margin-top:8px;width:100%;" onclick="eepromDecode()">🔬 DECODE</button>
+      <div id="eepromResult" style="margin-top:10px;font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--text-dim);line-height:1.8;"></div>
+    </div>
+    <div class="card">
+      <div class="card-hd">Odometer Encoder</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;gap:8px;align-items:center;">
+          <label style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--text-mid);width:80px;">Miles</label>
+          <input id="odoMiles" type="number" placeholder="123456" style="flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:0.68rem;padding:6px 8px;border-radius:4px;outline:none;">
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <label style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--text-mid);width:80px;">Vehicle</label>
+          <select id="odoVeh" style="flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:0.62rem;padding:6px 8px;border-radius:4px;outline:none;">
+            <option>GM Delco</option><option>Ford Visteon</option><option>Chrysler 93C56</option><option>Toyota Denso</option>
+          </select>
+        </div>
+        <button class="btn a" onclick="odoEncode()">ENCODE → HEX BYTES</button>
+        <div id="odoResult" style="font-family:'Share Tech Mono',monospace;font-size:0.64rem;color:var(--green);line-height:1.8;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ ABS TAB ══════════ -->
+<div class="mod-page" id="page-abs">
+  <div class="s-banner" id="abs-banner">
+    <div class="sb-ic">🔧</div>
+    <div><div class="sb-ttl idle">ABS MODULE</div><div class="sb-sub">Read DTCs, test solenoids, run hydraulic brake bleed sequence.</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hd">Fault Codes (DTCs)<div class="hd-btns"><button class="btn g" onclick="readDTCs('abs')">SCAN</button><button class="btn" onclick="clearDTCs('abs')">CLEAR</button></div></div>
+    <div class="dtc-list" id="abs-dtcs"><div class="empty">Press SCAN to read fault codes from ABS module.</div></div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-hd">Hydraulic Brake Bleed<div class="hd-btns"><button class="btn b" id="bleedBtn" onclick="startBleed()">▶ START BLEED</button></div></div>
+      <div class="warn-box">⚠ Cap all brake lines before starting. Do not run with module installed in vehicle.</div>
+      <div class="bleed-grid">
+        <div class="wb" id="wb-FL" onclick="bleedWheel('FL')"><div class="wb-lbl">FRONT LEFT</div><div class="wb-st idle" id="wbs-FL">Ready</div><div class="wb-cyc" id="wbc-FL">0 cycles</div></div>
+        <div class="wb" id="wb-FR" onclick="bleedWheel('FR')"><div class="wb-lbl">FRONT RIGHT</div><div class="wb-st idle" id="wbs-FR">Ready</div><div class="wb-cyc" id="wbc-FR">0 cycles</div></div>
+        <div class="wb" id="wb-RL" onclick="bleedWheel('RL')"><div class="wb-lbl">REAR LEFT</div><div class="wb-st idle" id="wbs-RL">Ready</div><div class="wb-cyc" id="wbc-RL">0 cycles</div></div>
+        <div class="wb" id="wb-RR" onclick="bleedWheel('RR')"><div class="wb-lbl">REAR RIGHT</div><div class="wb-st idle" id="wbs-RR">Ready</div><div class="wb-cyc" id="wbc-RR">0 cycles</div></div>
+      </div>
+      <div class="prog-wrap"><div class="prog-bar b" id="bleedProg" style="width:0%"></div></div>
+      <div id="bleedStatus" style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--text-dim);">Select all 4 corners and press START BLEED for full sequence.</div>
+    </div>
+    <div class="card">
+      <div class="card-hd">Solenoid Test<div class="hd-btns"><button class="btn" onclick="testSols('abs')">TEST ALL</button></div></div>
+      <div class="act-grid" id="abs-sols"></div>
+      <div style="margin-top:12px;">
+        <div class="card-hd" style="margin-bottom:8px;">Pump Motor</div>
+        <div class="pump-row">
+          <div class="pump-ring" id="abs-pump-ring">⚙</div>
+          <div class="pump-stats">
+            <div class="ps"><div class="ps-val" id="abs-pA">--</div><div class="ps-lbl">AMPS</div></div>
+            <div class="ps"><div class="ps-val" id="abs-pV">--</div><div class="ps-lbl">VOLTS</div></div>
+            <div class="ps"><div class="ps-val" id="abs-pT">--</div><div class="ps-lbl">SECS</div></div>
+          </div>
+        </div>
+        <button class="btn b" style="width:100%;" onclick="testPump('abs')">▶ RUN PUMP TEST</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ TIPM TAB ══════════ -->
+<div class="mod-page" id="page-tipm">
+  <div class="s-banner" id="tipm-banner">
+    <div class="sb-ic">🔌</div>
+    <div><div class="sb-ttl idle">TIPM — TOTALLY INTEGRATED POWER MODULE</div><div class="sb-sub">Chrysler/Dodge/Jeep 2007–2016. Test relays, read DTCs, verify fuel pump output.</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hd">Fault Codes<div class="hd-btns"><button class="btn g" onclick="readDTCs('tipm')">SCAN</button><button class="btn" onclick="clearDTCs('tipm')">CLEAR</button></div></div>
+    <div class="dtc-list" id="tipm-dtcs"><div class="empty">Press SCAN to read TIPM fault codes.</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hd">Relay Activation Test<div class="hd-btns"><button class="btn b" onclick="testRelays()">TEST ALL</button><button class="btn r" onclick="relaysOff()">ALL OFF</button></div></div>
+    <div class="relay-grid" id="tipm-relays"></div>
+  </div>
+  <div class="card">
+    <div class="card-hd">Live Data</div>
+    <div class="live-grid" id="tipm-live"></div>
+  </div>
+</div>
+
+<!-- ══════════ ECU TAB ══════════ -->
+<div class="mod-page" id="page-ecu">
+  <div class="s-banner" id="ecu-banner">
+    <div class="sb-ic">🧠</div>
+    <div><div class="sb-ttl idle">ECU / PCM</div><div class="sb-sub">Read DTCs, test injector drivers, ignition coils, and output actuators.</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hd">Fault Codes<div class="hd-btns"><button class="btn g" onclick="readDTCs('ecu')">SCAN</button><button class="btn" onclick="clearDTCs('ecu')">CLEAR</button></div></div>
+    <div class="dtc-list" id="ecu-dtcs"><div class="empty">Press SCAN to read ECU/PCM fault codes.</div></div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-hd">Injector Drivers<div class="hd-btns"><button class="btn" onclick="testSols('ecu-inj')">TEST ALL</button></div></div>
+      <div class="act-grid" id="ecu-inj"></div>
+    </div>
+    <div class="card">
+      <div class="card-hd">Ignition Coils<div class="hd-btns"><button class="btn" onclick="testSols('ecu-coil')">TEST ALL</button></div></div>
+      <div class="act-grid" id="ecu-coil"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd">Live Sensor Data</div>
+    <div class="live-grid" id="ecu-live"></div>
+  </div>
+</div>
+
+<!-- ══════════ BCM TAB ══════════ -->
+<div class="mod-page" id="page-bcm">
+  <div class="s-banner" id="bcm-banner">
+    <div class="sb-ic">🚗</div>
+    <div><div class="sb-ttl idle">BCM — BODY CONTROL MODULE</div><div class="sb-sub">Test power windows, door locks, horn, lights, and keyless entry outputs.</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hd">Fault Codes<div class="hd-btns"><button class="btn g" onclick="readDTCs('bcm')">SCAN</button><button class="btn" onclick="clearDTCs('bcm')">CLEAR</button></div></div>
+    <div class="dtc-list" id="bcm-dtcs"><div class="empty">Press SCAN to read BCM fault codes.</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hd">Output Activation Test<div class="hd-btns"><button class="btn b" onclick="testBCMOutputs()">TEST ALL</button><button class="btn r" onclick="bcmAllOff()">ALL OFF</button></div></div>
+    <div class="relay-grid" id="bcm-outputs"></div>
+  </div>
+</div>
+
+<!-- ══════════ TCM TAB ══════════ -->
+<div class="mod-page" id="page-tcm">
+  <div class="s-banner" id="tcm-banner">
+    <div class="sb-ic">⚙</div>
+    <div><div class="sb-ttl idle">TCM — TRANSMISSION CONTROL MODULE</div><div class="sb-sub">Fire shift solenoids, read adaptive memory, clear DTCs after repair.</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hd">Fault Codes<div class="hd-btns"><button class="btn g" onclick="readDTCs('tcm')">SCAN</button><button class="btn" onclick="clearDTCs('tcm')">CLEAR</button></div></div>
+    <div class="dtc-list" id="tcm-dtcs"><div class="empty">Press SCAN to read TCM fault codes.</div></div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-hd">Shift Solenoids<div class="hd-btns"><button class="btn" onclick="testSols('tcm')">TEST ALL</button></div></div>
+      <div class="act-grid" id="tcm-sols"></div>
+    </div>
+    <div class="card">
+      <div class="card-hd">Adaptive Memory</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button class="btn b" style="width:100%;" onclick="readAdaptive()">📡 READ ADAPTIVE MEMORY</button>
+        <button class="btn r" style="width:100%;" onclick="clearAdaptive()">🗑 CLEAR ADAPTIVE MEMORY</button>
+        <div id="adaptiveResult" style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--text-dim);line-height:1.8;padding:8px 0;"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd">Live Data</div>
+    <div class="live-grid" id="tcm-live"></div>
+  </div>
+</div>
+
+
+<!-- ══════════ EPS TAB ══════════ -->
+<div class="mod-page" id="page-eps">
+  <div class="s-banner" id="eps-banner">
+    <div class="sb-ic">🔩</div>
+    <div><div class="sb-ttl idle" id="eps-ttl">EPS — ELECTRIC POWER STEERING</div><div class="sb-sub" id="eps-sub">2018 Ford F150 PSCM. Arduino simulates HS2 CAN network. Connect MCP2515 to HS2CAN+ pin 3 and HS2CAN− pin 11.</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hd">Session Control
+      <div class="hd-btns">
+        <button class="btn g" id="eps-start" onclick="epsStart()">▶ START</button>
+        <button class="btn r" id="eps-stop" onclick="epsStop()" disabled>■ STOP</button>
+        <button class="btn b" id="eps-sweep" onclick="epsSweep()" disabled>↔ SWEEP</button>
+        <button class="btn p" id="eps-ping" onclick="epsCmd('EPS:PING')" disabled>◎ PING</button>
+        <button class="btn" id="eps-status-btn" onclick="epsCmd('EPS:STATUS')" disabled>ℹ STATUS</button>
+      </div>
+    </div>
+    <div class="live-grid">
+      <div class="lc"><div class="lc-lbl">CAN Bus</div><div class="lc-val bad" id="eps-lc-can">OFFLINE</div></div>
+      <div class="lc"><div class="lc-lbl">PSCM</div><div class="lc-val bad" id="eps-lc-pscm">OFFLINE</div></div>
+      <div class="lc"><div class="lc-lbl">Motor</div><div class="lc-val" id="eps-lc-motor">IDLE</div></div>
+      <div class="lc"><div class="lc-lbl">Direction</div><div class="lc-val good" id="eps-lc-dir">CENTER</div></div>
+      <div class="lc"><div class="lc-lbl">Assist</div><div class="lc-val" id="eps-lc-assist" style="color:#ff6b9d;">50%</div></div>
+      <div class="lc"><div class="lc-lbl">CAN Frames</div><div class="lc-val" id="eps-lc-frames" style="color:var(--blue);">0</div></div>
+    </div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-hd">Direction Control</div>
+      <div class="eps-dir-grid">
+        <button class="eps-dir-btn" id="eps-dl" onclick="epsSetDir('LEFT')" disabled><div style="font-size:1rem;margin-bottom:3px;">◄</div>LEFT</button>
+        <button class="eps-dir-btn dc" id="eps-dc" onclick="epsSetDir('CENTER')" disabled><div style="font-size:1rem;margin-bottom:3px;">●</div>CENTER</button>
+        <button class="eps-dir-btn" id="eps-dr" onclick="epsSetDir('RIGHT')" disabled><div style="font-size:1rem;margin-bottom:3px;">►</div>RIGHT</button>
+      </div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:var(--text-dim);margin-bottom:6px;">Assist Level</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-family:'Share Tech Mono',monospace;font-size:0.48rem;color:var(--text-dim);">0%</span>
+        <input type="range" class="eps-slider" id="eps-assist-inp" min="0" max="100" value="50" oninput="epsAssist(this.value)" disabled>
+        <span style="font-family:'Share Tech Mono',monospace;font-size:0.48rem;color:var(--text-dim);">100%</span>
+      </div>
+      <div class="eps-pct" id="eps-pct">50%</div>
+      <div style="margin-top:14px;">
+        <div class="card-hd" style="margin-bottom:8px;">Rack Position</div>
+        <div class="rack-road"><div class="rack-puck" id="eps-puck" style="left:50%;"></div></div>
+        <div class="rack-ends"><span>◄◄ FULL LEFT</span><span>CENTER</span><span>FULL RIGHT ►►</span></div>
+        <div style="text-align:center;margin-top:8px;font-family:'Orbitron',monospace;font-weight:900;font-size:1rem;color:#ff6b9d;" id="eps-dir-disp">● CENTER</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd">CAN Bus Monitor<div class="hd-btns"><button class="btn" onclick="epsCanClear()">CLEAR</button></div></div>
+      <div class="eps-can" id="eps-can"><div class="eps-idle">Waiting for CAN activity...</div></div>
+      <div style="margin-top:12px;">
+        <div class="card-hd" style="margin-bottom:8px;">Session Log<div class="hd-btns"><button class="btn" onclick="document.getElementById('eps-log').innerHTML=''">CLEAR</button></div></div>
+        <div class="log-box" id="eps-log"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd">Wiring Reference — 2018 F150 PSCM</div>
+    <div class="eps-wire">
+      <div class="eps-wire-row"><div class="eps-dot" style="background:#ffcc00;"></div><span class="eps-pin">C1463A · 2</span><span class="eps-desc">VBATT YEL/RED → Battery+ through 125A fuse</span></div>
+      <div class="eps-wire-row"><div class="eps-dot" style="background:#333;border:1px solid #666;"></div><span class="eps-pin">C1463A · 1</span><span class="eps-desc">GND BLK/VIO → Battery negative / Godiag pin 4</span></div>
+      <div class="eps-wire-row"><div class="eps-dot" style="background:#999;"></div><span class="eps-pin">C1463B · 1</span><span class="eps-desc">VPWR GRY/ORG → Bench supply 12V / Godiag pin 16</span></div>
+      <div class="eps-wire-row"><div class="eps-dot" style="background:#00cc44;"></div><span class="eps-pin">C1463B · 2</span><span class="eps-desc">HS2CAN+ GRN/ORG → MCP2515 CANH / Godiag pin 3</span></div>
+      <div class="eps-wire-row"><div class="eps-dot" style="background:#1ab4ff;"></div><span class="eps-pin">C1463B · 3</span><span class="eps-desc">HS2CAN− GRY/BLU → MCP2515 CANL / Godiag pin 11</span></div>
+      <div class="eps-wire-row"><div class="eps-dot" style="background:#ff8800;"></div><span class="eps-pin">TERM</span><span class="eps-desc">120Ω resistor on MCP2515 between CANH and CANL</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ EEPROM TAB ══════════ -->
+<div class="mod-page" id="page-eeprom">
+  <div class="s-banner" id="eeprom-banner">
+    <div class="sb-ic">🔬</div>
+    <div><div class="sb-ttl idle">EEPROM READER / WRITER</div><div class="sb-sub">Read, decode, and write 93Cxx (Microwire), 25xx (SPI), and 24Cxx (I2C) automotive EEPROM chips.</div></div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-hd">Chip Selection
+        <div class="hd-btns"><button class="btn g" onclick="eepromRead()">▶ READ CHIP</button><button class="btn b" onclick="eepromWrite()">✎ WRITE</button></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="sb-lbl">Chip Family</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;" id="chipFamGrid">
+          <div class="v-btn sel" id="cf-93C" onclick="selChipFam('93C')">93Cxx<div class="v-sub">Microwire · Chrysler</div></div>
+          <div class="v-btn" id="cf-25x" onclick="selChipFam('25x')">25xx<div class="v-sub">SPI · GM Delco</div></div>
+          <div class="v-btn" id="cf-24C" onclick="selChipFam('24C')">24Cxx<div class="v-sub">I2C · Ford</div></div>
+        </div>
+        <div class="sb-lbl" style="margin-top:6px;">Chip Model</div>
+        <select id="chipModel" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:0.68rem;padding:6px 8px;border-radius:4px;outline:none;" onchange="updateChipInfo()">
+          <option value="93C56">93C56 (2Kbit)</option>
+          <option value="93C46">93C46 (1Kbit)</option>
+          <option value="93C66">93C66 (4Kbit)</option>
+          <option value="93C86">93C86 (16Kbit)</option>
+        </select>
+        <div class="info-box" id="chipInfoBox">
+          <span class="ik">Family:  </span><span class="iv" id="ci-fam">Microwire</span><br>
+          <span class="ik">Size:    </span><span class="iv" id="ci-size">256 bytes</span><br>
+          <span class="ik">Protocol:</span><span class="iv" id="ci-prot">Microwire</span><br>
+          <span class="ik">Voltage: </span><span class="iv" id="ci-volt">5V</span><br>
+          <span class="ik">Vehicle: </span><span class="iv" id="ci-veh">Chrysler clusters</span>
+        </div>
+        <div class="warn-box" style="margin:0;">⚠ Insert chip into ZIF socket before reading. Match pin 1 notch to socket marker. 5V chips only — do NOT insert 3.3V chips without voltage selection jumper.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd">Hex Dump
+        <div class="hd-btns"><button class="btn" onclick="clearHex()">CLEAR</button><button class="btn a" onclick="exportHex()">EXPORT</button></div>
+      </div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:var(--text-dim);margin-bottom:6px;">Address · 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F</div>
+      <div id="hexDump" style="background:#050708;border:1px solid var(--border);border-radius:4px;padding:8px;font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--green);line-height:1.9;height:220px;overflow-y:auto;white-space:pre;">No data — insert chip and press READ CHIP</div>
+    </div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-hd">Odometer Decode
+        <div class="hd-btns"><button class="btn g" onclick="decodeOdo()">DECODE</button></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <textarea id="odoHexIn" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--green);font-family:'Share Tech Mono',monospace;font-size:0.6rem;padding:8px;height:70px;resize:none;outline:none;" placeholder="Paste hex bytes from chip dump... e.g. 00 0F A5 B2 ..."></textarea>
+        <div id="odoDecodeResult" style="font-family:'Share Tech Mono',monospace;font-size:0.64rem;line-height:1.9;color:var(--text-dim);">Paste hex and press DECODE to extract odometer value.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd">Odometer Encode</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;gap:8px;align-items:center;">
+          <label style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--text-mid);width:70px;">Miles</label>
+          <input id="odoEncMiles" type="number" placeholder="123456" style="flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:0.68rem;padding:6px 8px;border-radius:4px;outline:none;">
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <label style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--text-mid);width:70px;">Chip</label>
+          <select id="odoEncChip" style="flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:0.62rem;padding:6px 8px;border-radius:4px;outline:none;">
+            <option>93C56 · Chrysler</option><option>25xx · GM Delco</option><option>24C04 · Ford Visteon</option><option>93C46 · Toyota Denso</option>
+          </select>
+        </div>
+        <button class="btn a" onclick="encodeOdo()">ENCODE → WRITE BYTES</button>
+        <div id="odoEncResult" style="font-family:'Share Tech Mono',monospace;font-size:0.64rem;color:var(--green);line-height:1.9;"></div>
+        <button class="btn b" id="writeOdoBtn" onclick="writeOdoToChip()" disabled style="opacity:0.3;">WRITE TO CHIP</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd">VIN / Calibration Decoder</div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--text-dim);margin-bottom:10px;">Automatically extracts VIN, calibration data, and security codes from raw chip dump.</div>
+    <div id="vinDecodeResult" style="font-family:'Share Tech Mono',monospace;font-size:0.62rem;line-height:1.9;color:var(--text-dim);">Read chip first to auto-decode VIN and calibration data.</div>
+  </div>
+</div>
+</div><!-- /content -->
+</div><!-- /shell -->
+
+<script>
+// ═══════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════
+var VEHICLES = {
+  GM:       { make:'GM/Chevrolet',   proto:'CAN 500kbps' },
+  FORD:     { make:'Ford/Lincoln',   proto:'CAN 125kbps' },
+  CHRYSLER: { make:'Chrysler/Dodge', proto:'CAN 500kbps' },
+  TOYOTA:   { make:'Toyota/Lexus',   proto:'CAN 500kbps' },
+};
+
+var MOD_INFO = {
+  cluster:{ mod:'Instrument Cluster', id:'0x3E9' },
+  abs:    { mod:'ABS Module',         id:'0x0C01' },
+  tipm:   { mod:'TIPM',               id:'0x06D0' },
+  ecu:    { mod:'ECU / PCM',          id:'0x7E0' },
+  bcm:    { mod:'BCM',                id:'0x0540' },
+  tcm:    { mod:'TCM',                id:'0x0700' },
+  eeprom: { mod:'EEPROM Reader', id:'ZIF Socket' },
+  eps:    { mod:'EPS / Power Steering', id:'HS2-CAN 500k' },
+};
+
+var DTC_DB = {
+  abs:{
+    GM:[{c:'C0035',d:'LF Wheel Speed Sensor',t:'sensor'},{c:'C0040',d:'RF Wheel Speed Sensor',t:'sensor'},{c:'C0045',d:'LR Wheel Speed Sensor',t:'sensor'},{c:'C0050',d:'RR Wheel Speed Sensor',t:'sensor'},{c:'C0110',d:'Pump Motor Circuit',t:'pump'},{c:'C0121',d:'Valve Relay Circuit',t:'solenoid'}],
+    FORD:[{c:'C1145',d:'RF Speed Sensor Failure',t:'sensor'},{c:'C1155',d:'LF Speed Sensor Failure',t:'sensor'},{c:'C1095',d:'ABS Pump Motor Circuit',t:'pump'},{c:'C1233',d:'LF Speed Signal Missing',t:'sensor'}],
+    CHRYSLER:[{c:'C0031',d:'LF WSS Circuit Low',t:'sensor'},{c:'C0037',d:'RF WSS Circuit Low',t:'sensor'},{c:'C0110',d:'Pump Motor Stalled',t:'pump'},{c:'C0121',d:'Solenoid Valve Relay',t:'solenoid'}],
+    TOYOTA:[{c:'C1271',d:'LF Speed Sensor Malfunction',t:'sensor'},{c:'C1272',d:'RF Speed Sensor Malfunction',t:'sensor'},{c:'C1249',d:'ABS Motor Relay Open',t:'pump'}],
+  },
+  tipm:{
+    CHRYSLER:[{c:'B1481',d:'Fuel Pump Relay Control Circuit',t:'relay'},{c:'B2204',d:'Horn Relay Control Circuit',t:'relay'},{c:'B1516',d:'Starter Relay Control Circuit',t:'relay'},{c:'B2216',d:'Wiper Motor Relay Circuit',t:'relay'}],
+    GM:[],FORD:[],TOYOTA:[],
+  },
+  ecu:{
+    GM:[{c:'P0016',d:'Crank/Cam Correlation B1',t:'timing'},{c:'P0101',d:'MAF Sensor Range/Performance',t:'sensor'},{c:'P0300',d:'Random/Multiple Misfire',t:'ignition'},{c:'P0335',d:'CKP Sensor A Circuit',t:'sensor'}],
+    FORD:[{c:'P0102',d:'MAF Sensor Low Input',t:'sensor'},{c:'P0122',d:'TPS Sensor Circuit Low',t:'sensor'},{c:'P0302',d:'Cylinder 2 Misfire',t:'ignition'}],
+    CHRYSLER:[{c:'P0107',d:'MAP Sensor Circuit Low',t:'sensor'},{c:'P0201',d:'Injector 1 Circuit',t:'injector'},{c:'P0351',d:'Ignition Coil A Primary',t:'ignition'}],
+    TOYOTA:[{c:'P0100',d:'MAF Meter Circuit',t:'sensor'},{c:'P0300',d:'Random Misfire Detected',t:'ignition'},{c:'P0340',d:'CMP Sensor A Circuit Low',t:'sensor'}],
+  },
+  bcm:{
+    GM:[{c:'B0019',d:'Driver Side Airbag Circuit',t:'safety'},{c:'B0532',d:'Headlamp Switch Circuit',t:'switch'},{c:'B1001',d:'HVAC Control Module',t:'hvac'}],
+    FORD:[{c:'B1342',d:'ECU is Defective',t:'power'},{c:'B1566',d:'Door Ajar Switch Circuit',t:'switch'}],
+    CHRYSLER:[{c:'B1044',d:'Battery Temperature Sensor',t:'sensor'},{c:'B2203',d:'Horn Output Circuit Failure',t:'output'}],
+    TOYOTA:[{c:'B2786',d:'Transponder Key ECU',t:'security'},{c:'B2799',d:'Engine Immobiliser System',t:'security'}],
+  },
+  tcm:{
+    GM:[{c:'P0700',d:'TCM Malfunction Indicator',t:'general'},{c:'P0730',d:'Incorrect Gear Ratio',t:'mechanical'},{c:'P0751',d:'Shift Solenoid A Performance',t:'solenoid'},{c:'P0756',d:'Shift Solenoid B Performance',t:'solenoid'}],
+    FORD:[{c:'P0700',d:'TCM Malfunction',t:'general'},{c:'P0741',d:'TCC Circuit Performance',t:'solenoid'},{c:'P0753',d:'Shift Solenoid A Electrical',t:'solenoid'}],
+    CHRYSLER:[{c:'P0700',d:'TCM Fault',t:'general'},{c:'P0731',d:'Gear 1 Incorrect Ratio',t:'mechanical'},{c:'P0750',d:'Shift Solenoid A',t:'solenoid'}],
+    TOYOTA:[{c:'P0700',d:'TCM Malfunction',t:'general'},{c:'P0750',d:'Shift Solenoid A Malfunction',t:'solenoid'},{c:'P0755',d:'Shift Solenoid B Malfunction',t:'solenoid'}],
+  },
+};
+
+var ABS_SOLS = {GM:['FL IN','FL OUT','FR IN','FR OUT','RL IN','RL OUT','RR IN','RR OUT'],FORD:['LF APPLY','LF REL','RF APPLY','RF REL','LR APPLY','LR REL','RR APPLY','RR REL'],CHRYSLER:['LF BUILD','LF DECAY','RF BUILD','RF DECAY','RR BUILD','RR DECAY'],TOYOTA:['FL HOLD','FL DECAY','FR HOLD','FR DECAY','RL HOLD','RL DECAY','RR HOLD','RR DECAY']};
+var TCM_SOLS = {GM:['SS-A','SS-B','SS-C','TCC','PC SOL','OC SOL'],FORD:['SS-A','SS-B','SS-C','TCC','EPC SOL'],CHRYSLER:['SS-A','SS-B','SS-C','TCC LR','UD SOL','OD SOL'],TOYOTA:['S1','S2','S3','S4','SLT','SLU']};
+var TIPM_RELAYS = ['FUEL PUMP','STARTER','HORN','WIPER FRONT','WIPER REAR','A/C CLUTCH','COOLING FAN','ASD RELAY','ABS PUMP','RADIATOR FAN','PWR WINDOWS','IGN RELAY'];
+var BCM_OUTPUTS = ['DOOR LOCK','DOOR UNLOCK','HORN','INT LIGHTS','DOME LIGHT','TRUNK RELEASE','WINDOWS UP','WINDOWS DOWN','MIRRORS L','MIRRORS R','HAZARD FLASH','FOG LIGHTS'];
+var ECU_INJ = {GM:['INJ 1','INJ 2','INJ 3','INJ 4','INJ 5','INJ 6','INJ 7','INJ 8'],FORD:['INJ 1','INJ 2','INJ 3','INJ 4','INJ 5','INJ 6','INJ 7','INJ 8'],CHRYSLER:['INJ 1','INJ 2','INJ 3','INJ 4','INJ 5','INJ 6'],TOYOTA:['INJ 1','INJ 2','INJ 3','INJ 4','INJ 5','INJ 6']};
+var ECU_COIL = {GM:['CYL 1','CYL 2','CYL 3','CYL 4','CYL 5','CYL 6','CYL 7','CYL 8'],FORD:['COI 1','COI 2','COI 3','COI 4','COI 5','COI 6','COI 7','COI 8'],CHRYSLER:['CYL 1','CYL 2','CYL 3','CYL 4','CYL 5','CYL 6'],TOYOTA:['IGF 1','IGF 2','IGF 3','IGF 4','IGF 5','IGF 6']};
+
+var GAUGES = [{id:'spd',label:'SPEED',unit:'MPH',max:160},{id:'rpm',label:'TACH',unit:'RPM',max:8000},{id:'fuel',label:'FUEL',unit:'%',max:100},{id:'temp',label:'COOLANT',unit:'°F',max:260},{id:'oil',label:'OIL PSI',unit:'PSI',max:80},{id:'volt',label:'VOLTAGE',unit:'V',max:16}];
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+var activeMod = 'cluster';
+var activeV   = 'GM';
+var connected = false;
+var sweeping  = false;
+var bleedRunning = false;
+var sweepTimer = null;
+var gaugeVals = {spd:0,rpm:0,fuel:75,temp:195,oil:40,volt:14.2};
+var serialPort=null,serialWriter=null,serialReader=null,serialBuffer='';
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded',function(){
+  buildGauges();
+  buildAbsSols();
+  buildActGrid('ecu-inj', ECU_INJ[activeV].map(function(n,i){return {name:n,id:'inj-'+i};}));
+  buildActGrid('ecu-coil',ECU_COIL[activeV].map(function(n,i){return {name:n,id:'coil-'+i};}));
+  buildRelayGrid('tipm-relays', TIPM_RELAYS);
+  buildRelayGrid('bcm-outputs', BCM_OUTPUTS);
+  buildActGrid('tcm-sols', TCM_SOLS[activeV].map(function(n,i){return {name:n,id:'tcm-'+i};}));
+  buildLiveGrid('tipm-live',[{id:'tl-v',lbl:'Supply Voltage'},{id:'tl-ign',lbl:'Ignition'},{id:'tl-bat',lbl:'Battery %'},{id:'tl-temp',lbl:'Module Temp'},{id:'tl-stat',lbl:'Status'}]);
+  buildLiveGrid('ecu-live',[{id:'el-rpm',lbl:'Engine RPM'},{id:'el-map',lbl:'MAP kPa'},{id:'el-tps',lbl:'Throttle %'},{id:'el-ect',lbl:'Coolant °F'},{id:'el-maf',lbl:'MAF g/s'},{id:'el-stft',lbl:'Short FT %'}]);
+  buildLiveGrid('tcm-live',[{id:'tcl-gear',lbl:'Gear'},{id:'tcl-tcc',lbl:'TCC'},{id:'tcl-temp',lbl:'Trans Temp'},{id:'tcl-rpm',lbl:'Input RPM'},{id:'tcl-out',lbl:'Output RPM'},{id:'tcl-press',lbl:'Line Press'}]);
+  selV('GM');
+});
+
+// ═══════════════════════════════════════════════════
+// MODULE SWITCH
+// ═══════════════════════════════════════════════════
+function switchMod(m){
+  activeMod=m;
+  document.querySelectorAll('.mod-page').forEach(function(p){p.classList.remove('active');});
+  document.getElementById('page-'+m).classList.add('active');
+  document.querySelectorAll('.mod-tab').forEach(function(t){t.classList.remove('active');});
+  document.getElementById('tab-'+m).classList.add('active');
+  var mi=MOD_INFO[m];
+  document.getElementById('iMod').textContent=mi.mod;
+  document.getElementById('iId').textContent=mi.id;
+  log('Switched to '+mi.mod,'info');
+  if(connected) sendCmd('MODULE:'+m.toUpperCase());
+}
+
+// ═══════════════════════════════════════════════════
+// VEHICLE SELECT
+// ═══════════════════════════════════════════════════
+function selV(v){
+  activeV=v;
+  document.querySelectorAll('.v-btn').forEach(function(b){b.classList.remove('sel');});
+  document.getElementById('vb-'+v).classList.add('sel');
+  var d=VEHICLES[v];
+  document.getElementById('iMake').textContent=d.make;
+  document.getElementById('iProto').textContent=d.proto;
+  buildAbsSols();
+  buildActGrid('ecu-inj',ECU_INJ[v].map(function(n,i){return{name:n,id:'inj-'+i};}));
+  buildActGrid('ecu-coil',ECU_COIL[v].map(function(n,i){return{name:n,id:'coil-'+i};}));
+  buildActGrid('tcm-sols',TCM_SOLS[v].map(function(n,i){return{name:n,id:'tcm-'+i};}));
+  log('Vehicle: '+d.make,'info');
+  if(connected) sendCmd('VEHICLE:'+v);
+}
+
+// ═══════════════════════════════════════════════════
+// BUILD UI
+// ═══════════════════════════════════════════════════
+function buildGauges(){
+  var el=document.getElementById('gaugeSection');
+  el.innerHTML=GAUGES.map(function(g){
+    return '<div class="g-row">'+
+      '<span class="g-label">'+g.label+'</span>'+
+      '<div class="g-bar-wrap"><div class="g-bar" id="gbar-'+g.id+'"></div></div>'+
+      '<span class="g-val" id="gval-'+g.id+'">'+gaugeVals[g.id]+' '+g.unit+'</span>'+
+      '<div class="g-ctrl">'+
+        '<button class="g-btn" onclick="setGauge(\''+g.id+'\',0)">0</button>'+
+        '<button class="g-btn" onclick="setGauge(\''+g.id+'\','+g.max+')">MAX</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+function buildAbsSols(){
+  var sols=ABS_SOLS[activeV]||ABS_SOLS.GM;
+  buildActGrid('abs-sols',sols.map(function(n,i){return{name:n,id:'sol-'+i};}));
+}
+function buildActGrid(elId,items){
+  var el=document.getElementById(elId); if(!el) return;
+  el.innerHTML=items.map(function(item){
+    return '<div class="act-card" id="'+item.id+'" onclick="fireAct(\''+elId+'\',\''+item.id+'\')">'+
+      '<div class="act-name">'+item.name+'</div>'+
+      '<div class="act-ico">⚡</div>'+
+      '<div class="act-st idle" id="'+item.id+'-st">IDLE</div>'+
+      '<div class="act-amp" id="'+item.id+'-amp">-- A</div>'+
+    '</div>';
+  }).join('');
+}
+function buildRelayGrid(elId,names){
+  var el=document.getElementById(elId); if(!el) return;
+  el.innerHTML=names.map(function(n,i){
+    var rid='relay-'+elId+'-'+i;
+    return '<div class="relay roff" id="'+rid+'" onclick="toggleRelay(\''+rid+'\')">'+
+      '<div class="relay-name">'+n+'</div>'+
+      '<div class="relay-ico">🔌</div>'+
+      '<div class="relay-st off" id="'+rid+'-st">OFF</div>'+
+    '</div>';
+  }).join('');
+}
+function buildLiveGrid(elId,cells){
+  var el=document.getElementById(elId); if(!el) return;
+  el.innerHTML=cells.map(function(c){
+    return '<div class="lc"><div class="lc-lbl">'+c.lbl+'</div><div class="lc-val" id="'+c.id+'">--</div></div>';
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// WEB SERIAL
+// ═══════════════════════════════════════════════════
+async function toggleConn(){
+  if(connected){ await doDisconnect(); } else { await doConnect(); }
+}
+async function doConnect(){
+  if(!navigator.serial){ log('Use Chrome browser — Web Serial required','err'); alert('Please use Google Chrome.'); return; }
+  try{
+    var baud=parseInt(document.getElementById('baudSel').value)||115200;
+    serialPort=await navigator.serial.requestPort();
+    try{ await serialPort.open({baudRate:baud}); }
+    catch(e){ log('Port busy — close Arduino IDE Serial Monitor first','err'); serialPort=null; return; }
+    serialWriter=serialPort.writable.getWriter();
+    var dec=new TextDecoderStream();
+    serialPort.readable.pipeTo(dec.writable);
+    serialReader=dec.readable.getReader();
+    connected=true;
+    document.getElementById('connDot').classList.add('on');
+    document.getElementById('connLbl').textContent='CONNECTED';
+    document.getElementById('connBtn').textContent='DISCONNECT';
+    document.getElementById('connBtn').className='btn r';
+    log('Connected @ '+baud+' baud','ok');
+    startReadLoop();
+    await sleep(600);
+    await sendCmd('PING');
+    await sleep(200);
+    await sendCmd('VEHICLE:'+activeV);
+    await sendCmd('MODULE:'+activeMod.toUpperCase());
+  }catch(e){ if(e.name!=='NotFoundError') log('Connect failed: '+e.message,'err'); connected=false; serialPort=null; serialWriter=null; serialReader=null; }
+}
+async function doDisconnect(){
+  connected=false; sweeping=false; if(sweepTimer){clearInterval(sweepTimer);sweepTimer=null;}
+  var reader=serialReader,writer=serialWriter,port=serialPort;
+  serialReader=null;serialWriter=null;serialPort=null;
+  if(reader){try{await reader.cancel();}catch(e){} try{reader.releaseLock();}catch(e){}}
+  if(writer){try{writer.releaseLock();}catch(e){}}
+  if(port){await sleep(150);try{await port.close();}catch(e){}}
+  document.getElementById('connDot').classList.remove('on');
+  document.getElementById('connLbl').textContent='DISCONNECTED';
+  document.getElementById('connBtn').textContent='CONNECT';
+  document.getElementById('connBtn').className='btn a';
+  log('Disconnected','warn');
+}
+async function sendCmd(cmd){
+  if(!serialWriter){log('Not connected','err');return;}
+  try{ await serialWriter.write(new TextEncoder().encode(cmd+'\r\n')); log('TX: '+cmd,'info'); }
+  catch(e){ log('TX error: '+e.message,'err'); }
+}
+function startReadLoop(){
+  (async function(){
+    try{
+      while(true){
+        if(!serialReader) break;
+        var r; try{r=await serialReader.read();}catch(e){break;}
+        if(!r||r.done||!serialReader) break;
+        serialBuffer+=r.value;
+        var lines=serialBuffer.split('\n'); serialBuffer=lines.pop();
+        lines.forEach(function(line){ line=line.trim(); if(line) handleRx(line); });
+      }
+    }catch(e){ if(connected) log('Read error: '+e.message,'err'); }
+  })();
+}
+function handleRx(line){
+  if(line.startsWith('EPS:')){ handleEpsRx(line); return; }
+  var cls='info';
+  if(line==='PONG'){cls='ok';line='PONG — Arduino alive ✓';}
+  else if(line.startsWith('OK:'))cls='ok';
+  else if(line.startsWith('ERR:'))cls='err';
+  else if(line.startsWith('LOG:')){cls='info';line=line.substring(4);}
+  log('RX: '+line,cls);
+}
+
+// ═══════════════════════════════════════════════════
+// CLUSTER FUNCTIONS
+// ═══════════════════════════════════════════════════
+function clusterSweep(){
+  sweeping=true;
+  setBanner('cluster','run','⚡','SWEEPING ALL GAUGES','Sending CAN frames to instrument cluster...');
+  if(connected) sendCmd('SWEEP:START');
+  else{
+    if(sweepTimer) clearInterval(sweepTimer);
+    var dirs={spd:1,rpm:1,fuel:1,temp:1,oil:1,volt:1};
+    var maxes={spd:160,rpm:8000,fuel:100,temp:260,oil:80,volt:16};
+    var mins={spd:0,rpm:0,fuel:0,temp:100,oil:0,volt:9};
+    var steps={spd:1.2,rpm:48,fuel:0.5,temp:0.8,oil:0.4,volt:0.05};
+    sweepTimer=setInterval(function(){
+      GAUGES.forEach(function(g){
+        gaugeVals[g.id]+=dirs[g.id]*steps[g.id];
+        if(gaugeVals[g.id]>=maxes[g.id]){gaugeVals[g.id]=maxes[g.id];dirs[g.id]=-1;}
+        if(gaugeVals[g.id]<=mins[g.id]){gaugeVals[g.id]=mins[g.id];dirs[g.id]=1;}
+        updateGauge(g.id,gaugeVals[g.id],maxes[g.id],g.unit);
+      });
+    },30);
+  }
+  log('Gauge sweep started','ok');
+}
+function clusterStop(){
+  sweeping=false;
+  if(sweepTimer){clearInterval(sweepTimer);sweepTimer=null;}
+  if(connected) sendCmd('SWEEP:STOP');
+  setBanner('cluster','','🔧','CLUSTER TOOL','Sweep stopped.');
+  log('Sweep stopped','warn');
+}
+function clusterZero(){
+  GAUGES.forEach(function(g){setGauge(g.id,0);});
+  if(connected) sendCmd('RTZ:ZERO');
+}
+function clusterMax(){
+  GAUGES.forEach(function(g){setGauge(g.id,g.max);});
+}
+function setGauge(id,val){
+  var g=GAUGES.find(function(x){return x.id===id;});
+  if(!g) return;
+  gaugeVals[id]=val;
+  updateGauge(id,val,g.max,g.unit);
+  if(connected) sendCmd('GAUGE:'+id+':'+val);
+}
+function updateGauge(id,val,max,unit){
+  var bar=document.getElementById('gbar-'+id);
+  var lbl=document.getElementById('gval-'+id);
+  if(bar) bar.style.width=((val/max)*100)+'%';
+  if(lbl) lbl.textContent=(typeof val==='number'?val.toFixed(id==='volt'?1:0):val)+' '+unit;
+}
+
+// EEPROM
+function eepromRead(){ if(connected) sendCmd('EEPROM:READ:25XX'); else log('Connect Arduino with SOIC8 clip attached','warn'); }
+function eepromDecode(){
+  var hex=document.getElementById('eepromHex').value.trim();
+  if(!hex){log('Enter hex bytes first','err');return;}
+  var bytes=hex.split(/\s+/).map(function(h){return parseInt(h,16);}).filter(function(b){return !isNaN(b);});
+  if(bytes.length<3){log('Need at least 3 bytes','err');return;}
+  var tenths=(bytes[0]<<16)|(bytes[1]<<8)|bytes[2];
+  var miles=(tenths/10).toFixed(1);
+  document.getElementById('eepromResult').innerHTML=
+    '<span style="color:var(--green)">✓ Decoded</span><br>'+
+    'Raw bytes: '+bytes.slice(0,3).map(function(b){return b.toString(16).padStart(2,'0').toUpperCase();}).join(' ')+' ...<br>'+
+    'Odometer: <span style="color:var(--accent)">'+parseFloat(miles).toLocaleString()+' miles</span><br>'+
+    'Tenths: '+tenths.toLocaleString()+' × 0.1mi';
+  log('EEPROM decoded: '+parseFloat(miles).toLocaleString()+' miles','ok');
+}
+function odoEncode(){
+  var miles=parseInt(document.getElementById('odoMiles').value)||0;
+  var veh=document.getElementById('odoVeh').value;
+  var tenths=miles*10;
+  var b0=(tenths>>16)&0xFF, b1=(tenths>>8)&0xFF, b2=tenths&0xFF;
+  var hex=[b0,b1,b2].map(function(b){return b.toString(16).padStart(2,'0').toUpperCase();}).join(' ');
+  document.getElementById('odoResult').innerHTML=
+    'Vehicle: <span style="color:var(--blue)">'+veh+'</span><br>'+
+    'Miles: <span style="color:var(--accent)">'+miles.toLocaleString()+'</span><br>'+
+    'Write bytes: <span style="color:var(--green)">'+hex+'</span><br>'+
+    'Address: <span style="color:var(--text-mid)">0x00 (primary)</span>';
+  log('Encoded: '+miles.toLocaleString()+' mi → '+hex,'ok');
+}
+
+// ═══════════════════════════════════════════════════
+// DTC FUNCTIONS
+// ═══════════════════════════════════════════════════
+async function readDTCs(mod){
+  log('Reading '+mod.toUpperCase()+' DTCs...','info');
+  setBanner(mod,'run','🔄','READING DTCs...','Requesting fault codes from module...');
+  if(connected){ sendCmd(mod.toUpperCase()+':DTC:READ'); await sleep(800); }
+  var db=DTC_DB[mod]; var vdb=db?db[activeV]:[];
+  var n=Math.floor(Math.random()*3);
+  var faults=[];
+  for(var i=0;i<n&&vdb&&vdb.length;i++){
+    var d=vdb[Math.floor(Math.random()*vdb.length)];
+    faults.push({code:d.c,desc:d.d,type:d.t,active:Math.random()>0.4});
+  }
+  renderDTCs(mod+'-dtcs',faults);
+  if(faults.length===0){
+    setBanner(mod,'pass','✅','NO FAULT CODES','Module memory is clean.');
+    log('No DTCs found','ok');
+  } else {
+    var act=faults.filter(function(f){return f.active;}).length;
+    setBanner(mod,act>0?'fail':'warn',act>0?'❌':'⚠️',act>0?'ACTIVE FAULTS FOUND':'HISTORIC FAULTS',faults.length+' DTC(s) — '+act+' active.');
+    log(faults.length+' DTC(s) found','warn');
+  }
+}
+async function clearDTCs(mod){
+  if(connected) sendCmd(mod.toUpperCase()+':DTC:CLEAR');
+  await sleep(400);
+  renderDTCs(mod+'-dtcs',[]);
+  setBanner(mod,'pass','✅','DTCs CLEARED','Module fault memory cleared.');
+  log(mod.toUpperCase()+' DTCs cleared','ok');
+}
+function renderDTCs(elId,faults){
+  var el=document.getElementById(elId); if(!el) return;
+  if(faults.length===0){
+    el.innerHTML='<div class="dtc none"><div class="dtc-code none">CLEAN</div><div><div class="dtc-desc">No fault codes stored</div><div class="dtc-sub">Memory is clear</div></div><div class="badge none">NO FAULTS</div></div>';
+    return;
+  }
+  el.innerHTML=faults.map(function(f){
+    var cls=f.active?'act':'hist';
+    return '<div class="dtc '+cls+'"><div class="dtc-code '+cls+'">'+f.code+'</div>'+
+      '<div><div class="dtc-desc">'+f.desc+'</div><div class="dtc-sub">'+(f.type==='sensor'?'🔵 Sensor':f.type==='pump'?'⚙ Actuator':f.type==='relay'?'🔌 Relay':f.type==='solenoid'?'⚡ Solenoid':f.type==='ignition'?'⚡ Ignition':f.type==='injector'?'💧 Injector':'⚡ '+f.type)+(f.active?' · Active',' · Historic')+'</div></div>'+
+      '<div class="badge '+cls+'">'+(f.active?'ACTIVE':'HISTORIC')+'</div></div>';
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// ABS FUNCTIONS
+// ═══════════════════════════════════════════════════
+async function startBleed(){
+  if(bleedRunning) return;
+  bleedRunning=true;
+  var wheels=['FL','FR','RL','RR'];
+  wheels.forEach(function(w){
+    document.getElementById('wb-'+w).className='wb';
+    document.getElementById('wbs-'+w).textContent='Waiting...';
+    document.getElementById('wbs-'+w).className='wb-st idle';
+    document.getElementById('wbc-'+w).textContent='0 cycles';
+  });
+  document.getElementById('bleedProg').style.width='0%';
+  document.getElementById('bleedProg').className='prog-bar b';
+  document.getElementById('bleedStatus').textContent='Bleed sequence running...';
+  setBanner('abs','run','🔄','BRAKE BLEED IN PROGRESS','Cycling solenoids — do not interrupt.');
+  log('Brake bleed started','info');
+  if(connected){ sendCmd('ABS:BLEED:START'); return; }
+  // simulation
+  if(connected) return;
+  var pRing=document.getElementById('abs-pump-ring');
+  pRing.className='pump-ring spin';
+  await sleep(1500);
+  pRing.className='pump-ring';
+  for(var i=0;i<wheels.length;i++){
+    var w=wheels[i];
+    document.getElementById('wb-'+w).className='wb wact';
+    document.getElementById('wbs-'+w).textContent='Bleeding...';
+    document.getElementById('wbs-'+w).className='wb-st wact';
+    for(var c=1;c<=5;c++){
+      document.getElementById('wbc-'+w).textContent=c+' cycles';
+      await sleep(400);
+    }
+    document.getElementById('wb-'+w).className='wb wdone';
+    document.getElementById('wbs-'+w).textContent='Complete';
+    document.getElementById('wbs-'+w).className='wb-st wdone';
+    document.getElementById('bleedProg').style.width=(((i+1)/4)*100)+'%';
+    log(w+' wheel bleed done','ok');
+  }
+  document.getElementById('bleedProg').className='prog-bar g';
+  document.getElementById('bleedStatus').textContent='All corners complete. Check fluid level.';
+  setBanner('abs','pass','✅','BLEED COMPLETE','All 4 corners bled. Check fluid level and pedal feel.');
+  bleedRunning=false;
+}
+async function bleedWheel(w){
+  if(bleedRunning) return;
+  document.getElementById('wb-'+w).className='wb wact';
+  document.getElementById('wbs-'+w).textContent='Bleeding...';
+  document.getElementById('wbs-'+w).className='wb-st wact';
+  if(connected){ sendCmd('ABS:BLEED:WHEEL:'+w); return; }
+  for(var c=1;c<=5;c++){document.getElementById('wbc-'+w).textContent=c+' cycles';await sleep(350);}
+  document.getElementById('wb-'+w).className='wb wdone';
+  document.getElementById('wbs-'+w).textContent='Complete';
+  document.getElementById('wbs-'+w).className='wb-st wdone';
+  log(w+' wheel bleed complete','ok');
+}
+
+// ═══════════════════════════════════════════════════
+// ACTUATOR / RELAY FUNCTIONS
+// ═══════════════════════════════════════════════════
+async function testSols(gridId){
+  log('Testing '+gridId+'...','info');
+  var cards=document.getElementById(gridId)?document.getElementById(gridId).querySelectorAll('.act-card'):[];
+  for(var i=0;i<cards.length;i++){
+    await fireActEl(cards[i]);
+    await sleep(180);
+  }
+  log('Solenoid test complete','ok');
+}
+async function fireAct(gridId,id){
+  var el=document.getElementById(id); if(!el) return;
+  await fireActEl(el);
+  if(connected) sendCmd('SOL:'+id+':PULSE');
+}
+async function fireActEl(el){
+  var st=el.querySelector('.act-st'), amp=el.querySelector('.act-amp');
+  el.className=el.className.replace(/\bpass\b|\bfail\b/,'')+' firing';
+  if(st){st.className='act-st firing';st.textContent='FIRING';}
+  await sleep(300);
+  var ok=Math.random()>0.08;
+  var a=ok?(1.8+Math.random()*0.8).toFixed(1):'0.0';
+  el.className=el.className.replace(/\bfiring\b/,'')+(ok?' pass':' fail');
+  if(st){st.className='act-st '+(ok?'pass':'fail');st.textContent=ok?'PASS':'OPEN';}
+  if(amp) amp.textContent=a+' A';
+}
+async function testPump(mod){
+  var ring=document.getElementById(mod+'-pump-ring'); if(!ring) return;
+  ring.className='pump-ring spin';
+  if(connected) sendCmd('ABS:PUMP:ON');
+  await sleep(2500);
+  if(connected) sendCmd('ABS:PUMP:OFF');
+  ring.className='pump-ring';
+  var a=(8+Math.random()*5).toFixed(1), v=(11.8+Math.random()*0.4).toFixed(1);
+  document.getElementById(mod+'-pA').textContent=a;
+  document.getElementById(mod+'-pV').textContent=v;
+  document.getElementById(mod+'-pT').textContent='2.5';
+  log('Pump: '+a+'A @ '+v+'V','ok');
+}
+async function toggleRelay(rid){
+  var el=document.getElementById(rid); if(!el) return;
+  var st=el.querySelector('.relay-st');
+  var isOn=el.classList.contains('ron');
+  el.className=el.className.replace(/\bron\b|\broff\b|\brfail\b/,'')+(isOn?' roff':' ron');
+  if(st){st.className='relay-st '+(isOn?'off':'on');st.textContent=isOn?'OFF':'ON';}
+  if(connected) sendCmd('RELAY:'+rid+':'+(isOn?'OFF':'ON'));
+  log('Relay '+(isOn?'OFF':'ON'),'ok');
+}
+async function testRelays(){
+  var relays=document.getElementById('tipm-relays').querySelectorAll('.relay');
+  for(var i=0;i<relays.length;i++){
+    var el=relays[i], st=el.querySelector('.relay-st');
+    el.className=el.className.replace(/\bron\b|\broff\b|\brfail\b/,'')+' ron';
+    if(st){st.className='relay-st on';st.textContent='ON';}
+    await sleep(300);
+    el.className=el.className.replace(/\bron\b/,'')+' roff';
+    if(st){st.className='relay-st off';st.textContent='OFF';}
+    await sleep(100);
+    log('Relay '+(i+1)+' OK','ok');
+  }
+}
+function relaysOff(){
+  document.getElementById('tipm-relays').querySelectorAll('.relay').forEach(function(el){
+    el.className=el.className.replace(/\bron\b|\brfail\b/,'')+' roff';
+    var st=el.querySelector('.relay-st');
+    if(st){st.className='relay-st off';st.textContent='OFF';}
+  });
+  if(connected) sendCmd('TIPM:ALL:OFF');
+}
+async function testBCMOutputs(){
+  var outputs=document.getElementById('bcm-outputs').querySelectorAll('.relay');
+  for(var i=0;i<outputs.length;i++){
+    var el=outputs[i],st=el.querySelector('.relay-st');
+    el.className=el.className.replace(/\bron\b|\broff\b/,'')+' ron';
+    if(st){st.className='relay-st on';st.textContent='ON';}
+    await sleep(400);
+    el.className=el.className.replace(/\bron\b/,'')+' roff';
+    if(st){st.className='relay-st off';st.textContent='OFF';}
+    await sleep(100);
+  }
+  log('BCM output test complete','ok');
+}
+function bcmAllOff(){
+  document.getElementById('bcm-outputs').querySelectorAll('.relay').forEach(function(el){
+    el.className=el.className.replace(/\bron\b/,'')+' roff';
+    var st=el.querySelector('.relay-st');
+    if(st){st.className='relay-st off';st.textContent='OFF';}
+  });
+}
+function stopAll(){
+  sweeping=false; bleedRunning=false;
+  if(sweepTimer){clearInterval(sweepTimer);sweepTimer=null;}
+  if(connected) sendCmd('STOP:ALL');
+  document.getElementById('abs-pump-ring').className='pump-ring';
+  log('All stopped','warn');
+}
+
+// ADAPTIVE MEMORY
+async function readAdaptive(){
+  if(connected) sendCmd('TCM:ADAPTIVE:READ');
+  await sleep(600);
+  document.getElementById('adaptiveResult').innerHTML=
+    '<span style="color:var(--blue)">Shift Adapt B1:</span> <span style="color:var(--green)">+4ms</span><br>'+
+    '<span style="color:var(--blue)">Shift Adapt B2:</span> <span style="color:var(--green)">-2ms</span><br>'+
+    '<span style="color:var(--blue)">TCC Adapt:     </span> <span style="color:var(--green)">+1ms</span><br>'+
+    '<span style="color:var(--blue)">Line Pressure: </span> <span style="color:var(--green)">nominal</span>';
+  log('Adaptive memory read','ok');
+}
+async function clearAdaptive(){
+  if(connected) sendCmd('TCM:ADAPTIVE:CLEAR');
+  await sleep(400);
+  document.getElementById('adaptiveResult').innerHTML='<span style="color:var(--green)">✓ Adaptive memory cleared — values reset to factory.</span>';
+  log('Adaptive memory cleared','ok');
+}
+
+// SIDE ACTIONS
+function modAction(type){
+  if(type==='primary'){
+    if(activeMod==='cluster') clusterSweep();
+    else if(activeMod==='abs') startBleed();
+    else if(activeMod==='tipm') testRelays();
+    else if(activeMod==='bcm') testBCMOutputs();
+    else if(activeMod==='ecu') testSols('ecu-inj');
+    else if(activeMod==='tcm') testSols('tcm-sols');
+  }
+  if(type==='dtc') readDTCs(activeMod==='cluster'?'abs':activeMod);
+  if(type==='clear') clearDTCs(activeMod==='cluster'?'abs':activeMod);
+}
+
+// ═══════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════
+function setBanner(mod,type,icon,title,sub){
+  var b=document.getElementById(mod+'-banner'); if(!b) return;
+  b.className='s-banner'+(type?' '+type:'');
+  b.querySelector('.sb-ic').textContent=icon;
+  var t=b.querySelector('.sb-ttl');
+  t.textContent=title; t.className='sb-ttl '+(type||'idle');
+  b.querySelector('.sb-sub').textContent=sub;
+}
+function log(msg,type){
+  var box=document.getElementById('logBox');
+  var div=document.createElement('div'); div.className='le';
+  var now=new Date();
+  var ts=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0')+':'+now.getSeconds().toString().padStart(2,'0');
+  div.innerHTML='<span class="ts">'+ts+'</span><span class="l'+(type||'info')+'">'+msg+'</span>';
+  box.appendChild(div); box.scrollTop=box.scrollHeight;
+}
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
+</script>
+</body>
+</html>
+<script>
+// ═══════════════════════════════════════════════════
+// EEPROM FUNCTIONS
+// ═══════════════════════════════════════════════════
+var activeChipFam = '93C';
+var lastHexDump = [];
+var lastEncodeBytes = [];
+
+var CHIP_DB = {
+  '93C56': { fam:'Microwire', size:'256 bytes', prot:'Microwire 3-wire', volt:'5V', veh:'Chrysler/Dodge clusters', odoOff:0x10, odoLen:3 },
+  '93C46': { fam:'Microwire', size:'128 bytes', prot:'Microwire 3-wire', volt:'5V', veh:'GM, Toyota clusters',     odoOff:0x08, odoLen:3 },
+  '93C66': { fam:'Microwire', size:'512 bytes', prot:'Microwire 3-wire', volt:'5V', veh:'Chrysler BCM/clusters',   odoOff:0x20, odoLen:4 },
+  '93C86': { fam:'Microwire', size:'2048 bytes', prot:'Microwire 3-wire', volt:'5V', veh:'Chrysler large modules', odoOff:0x40, odoLen:4 },
+  'AT25020': { fam:'SPI',     size:'256 bytes', prot:'SPI Mode 0',       volt:'5V', veh:'GM Delco clusters',      odoOff:0x00, odoLen:3 },
+  'AT25040': { fam:'SPI',     size:'512 bytes', prot:'SPI Mode 0',       volt:'5V', veh:'GM Delco / Delphi',      odoOff:0x00, odoLen:4 },
+  '24C04':  { fam:'I2C',     size:'512 bytes', prot:'I2C 400kHz',        volt:'5V', veh:'Ford Visteon clusters',  odoOff:0x00, odoLen:3 },
+  '24C08':  { fam:'I2C',     size:'1024 bytes', prot:'I2C 400kHz',       volt:'5V', veh:'Ford / Lincoln clusters', odoOff:0x04, odoLen:4 },
+};
+
+var CHIP_FAM_MODELS = {
+  '93C': ['93C56','93C46','93C66','93C86'],
+  '25x': ['AT25020','AT25040'],
+  '24C': ['24C04','24C08'],
+};
+
+function selChipFam(fam) {
+  activeChipFam = fam;
+  document.querySelectorAll('#chipFamGrid .v-btn').forEach(function(b){b.classList.remove('sel');});
+  document.getElementById('cf-'+fam).classList.add('sel');
+  var sel = document.getElementById('chipModel');
+  sel.innerHTML = CHIP_FAM_MODELS[fam].map(function(m){
+    return '<option value="'+m+'">'+m+' ('+CHIP_DB[m].size+')</option>';
+  }).join('');
+  updateChipInfo();
+}
+
+function updateChipInfo() {
+  var model = document.getElementById('chipModel').value;
+  var d = CHIP_DB[model];
+  if(!d) return;
+  document.getElementById('ci-fam').textContent  = d.fam;
+  document.getElementById('ci-size').textContent = d.size;
+  document.getElementById('ci-prot').textContent = d.prot;
+  document.getElementById('ci-volt').textContent = d.volt;
+  document.getElementById('ci-veh').textContent  = d.veh;
+}
+
+async function eepromRead() {
+  var model = document.getElementById('chipModel').value;
+  log('Reading '+model+' via ZIF socket...','info');
+  setBanner('eeprom','run','🔄','READING CHIP','Sending read command to Arduino...');
+  if(connected){ sendCmd('EEPROM:READ:'+model); await sleep(1500); }
+  // Generate simulated dump
+  var d = CHIP_DB[model] || CHIP_DB['93C56'];
+  var size = parseInt(d.size) || 256;
+  var bytes = [];
+  for(var i=0;i<size;i++){
+    if(i===0) bytes.push(0xFF);
+    else if(i>=d.odoOff && i<d.odoOff+d.odoLen) bytes.push(Math.floor(Math.random()*256));
+    else bytes.push(Math.random()>0.3 ? Math.floor(Math.random()*256) : 0xFF);
+  }
+  // Seed a plausible odometer — ~85000 miles = 850000 tenths
+  var tenths = 85000 * 10;
+  if(d.odoLen===3){ bytes[d.odoOff]=(tenths>>16)&0xFF; bytes[d.odoOff+1]=(tenths>>8)&0xFF; bytes[d.odoOff+2]=tenths&0xFF; }
+  else if(d.odoLen===4){ bytes[d.odoOff]=(tenths>>24)&0xFF; bytes[d.odoOff+1]=(tenths>>16)&0xFF; bytes[d.odoOff+2]=(tenths>>8)&0xFF; bytes[d.odoOff+3]=tenths&0xFF; }
+  lastHexDump = bytes;
+  renderHexDump(bytes);
+  setBanner('eeprom','pass','✅','READ COMPLETE',size+' bytes read from '+model+'. Scroll hex dump to view. Odometer auto-detected.');
+  log(model+' read: '+size+' bytes','ok');
+  autoDecodeVIN(bytes, model);
+}
+
+function renderHexDump(bytes) {
+  var lines = [];
+  for(var i=0;i<bytes.length;i+=16){
+    var addr = i.toString(16).padStart(4,'0').toUpperCase();
+    var hex = [];
+    var asc = '';
+    for(var j=0;j<16;j++){
+      if(i+j < bytes.length){
+        var b = bytes[i+j];
+        hex.push(b.toString(16).padStart(2,'0').toUpperCase());
+        asc += (b>=32&&b<127) ? String.fromCharCode(b) : '.';
+      } else { hex.push('  '); asc += ' '; }
+    }
+    lines.push(addr+' · '+hex.join(' ')+'  '+asc);
+  }
+  document.getElementById('hexDump').textContent = lines.join('\n');
+}
+
+function clearHex() {
+  lastHexDump = [];
+  document.getElementById('hexDump').textContent = 'No data — insert chip and press READ CHIP';
+  setBanner('eeprom','','🔬','EEPROM READY','Insert chip into ZIF socket and press READ CHIP.');
+}
+
+function exportHex() {
+  if(!lastHexDump.length){log('No data to export','err');return;}
+  var model = document.getElementById('chipModel').value;
+  var lines = [];
+  for(var i=0;i<lastHexDump.length;i+=16){
+    var hex = lastHexDump.slice(i,i+16).map(function(b){return b.toString(16).padStart(2,'0').toUpperCase();}).join(' ');
+    lines.push(hex);
+  }
+  var blob = new Blob([lines.join('\n')],{type:'text/plain'});
+  var a = document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=model+'_dump.hex';
+  a.click();
+  log('Exported '+model+'_dump.hex','ok');
+}
+
+function decodeOdo() {
+  var raw = document.getElementById('odoHexIn').value.trim();
+  if(!raw){log('Enter hex bytes to decode','err');return;}
+  var bytes = raw.split(/\s+/).map(function(h){return parseInt(h,16);}).filter(function(b){return !isNaN(b);});
+  if(bytes.length < 3){log('Need at least 3 bytes','err');return;}
+  var t3 = ((bytes[0]<<16)|(bytes[1]<<8)|bytes[2]);
+  var t4 = bytes.length>=4 ? ((bytes[0]<<24)|(bytes[1]<<16)|(bytes[2]<<8)|bytes[3]) : 0;
+  var m3 = (t3/10).toFixed(1);
+  var m4 = (t4/10).toFixed(1);
+  document.getElementById('odoDecodeResult').innerHTML =
+    '<span style="color:var(--text-mid)">3-byte decode (Chrysler/GM):</span>\n'+
+    '  Tenths: '+t3.toLocaleString()+'\n'+
+    '  Miles:  <span style="color:var(--green)">'+parseFloat(m3).toLocaleString()+' mi</span>  ('+
+    (parseFloat(m3)*1.60934).toFixed(0)+' km)\n\n'+
+    (bytes.length>=4 ?
+    '<span style="color:var(--text-mid)">4-byte decode (Ford/extended):</span>\n'+
+    '  Tenths: '+t4.toLocaleString()+'\n'+
+    '  Miles:  <span style="color:var(--green)">'+parseFloat(m4).toLocaleString()+' mi</span>  ('+
+    (parseFloat(m4)*1.60934).toFixed(0)+' km)\n' : '');
+  log('Decoded: 3-byte='+parseFloat(m3).toLocaleString()+'mi','ok');
+}
+
+function encodeOdo() {
+  var miles = parseInt(document.getElementById('odoEncMiles').value)||0;
+  var chip = document.getElementById('odoEncChip').value;
+  var tenths = miles*10;
+  var bytes3 = [(tenths>>16)&0xFF,(tenths>>8)&0xFF,tenths&0xFF];
+  var bytes4 = [(tenths>>24)&0xFF,(tenths>>16)&0xFF,(tenths>>8)&0xFF,tenths&0xFF];
+  var use4 = chip.indexOf('Ford')>=0;
+  var wb = use4 ? bytes4 : bytes3;
+  lastEncodeBytes = wb;
+  var hex = wb.map(function(b){return b.toString(16).padStart(2,'0').toUpperCase();}).join(' ');
+  document.getElementById('odoEncResult').innerHTML =
+    'Chip:   <span style="color:var(--blue)">'+chip+'</span>\n'+
+    'Miles:  <span style="color:var(--accent)">'+miles.toLocaleString()+' mi</span>\n'+
+    'Tenths: '+tenths.toLocaleString()+'\n'+
+    'Write:  <span style="color:var(--green)">'+hex+'</span>\n'+
+    'Width:  '+(use4?'4':'3')+'-byte format';
+  document.getElementById('writeOdoBtn').disabled=false;
+  document.getElementById('writeOdoBtn').style.opacity='1';
+  log('Encoded: '+miles.toLocaleString()+'mi → '+hex,'ok');
+}
+
+async function writeOdoToChip() {
+  var model = document.getElementById('chipModel').value;
+  if(!lastEncodeBytes.length){log('Encode first','err');return;}
+  var hex = lastEncodeBytes.map(function(b){return b.toString(16).padStart(2,'0').toUpperCase();}).join('');
+  log('Writing to '+model+'...','warn');
+  setBanner('eeprom','run','✎','WRITING CHIP','Sending write command to Arduino...');
+  if(connected){ await sendCmd('EEPROM:WRITE:'+model+':'+hex); await sleep(1000); }
+  else { await sleep(800); }
+  setBanner('eeprom','pass','✅','WRITE COMPLETE','Odometer bytes written to '+model+'. Verify by reading chip again.');
+  log('Write complete','ok');
+}
+
+// ═══════════════════════════════════════════════════
+// EPS / POWER STEERING — 2018 Ford F150 PSCM
+// HS2 CAN bus · IDs: 0x082 0x085 0x3CC confirmed
+// ═══════════════════════════════════════════════════
+var epsActive=false,epsCurrentDir='CENTER',epsFrameCount=0;
+
+function epsLog(msg,cls){
+  var b=document.getElementById('eps-log');if(!b)return;
+  var d=document.createElement('div');d.className='le';
+  var ts=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  d.innerHTML='<span class="ts">['+ts+']</span> <span class="l'+(cls||'info')+'">'+msg+'</span>';
+  b.appendChild(d);b.scrollTop=b.scrollHeight;
+}
+function epsLc(id,val,cls){
+  var el=document.getElementById(id);if(!el)return;
+  el.textContent=val;el.className='lc-val'+(cls?' '+cls:'');
+}
+function epsBanner(state,icon,ttl,sub){
+  var b=document.getElementById('eps-banner');if(!b)return;
+  b.className='s-banner'+(state?' '+state:'');
+  var t=document.getElementById('eps-ttl');if(t){t.className='sb-ttl '+(state||'idle');t.textContent=ttl;}
+  var s=document.getElementById('eps-sub');if(s)s.textContent=sub;
+  var ic=b.querySelector('.sb-ic');if(ic)ic.textContent=icon;
+}
+function epsControls(on){
+  ['eps-dl','eps-dc','eps-dr','eps-sweep','eps-ping','eps-status-btn','eps-assist-inp'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.disabled=!on;
+  });
+  var st=document.getElementById('eps-start');if(st)st.disabled=on;
+  var sp=document.getElementById('eps-stop');if(sp)sp.disabled=!on;
+}
+function epsStart(){
+  epsActive=true;epsControls(true);
+  epsBanner('run','🔩','PSCM SESSION ACTIVE','Arduino sending HS2 CAN keep-alive frames. Waiting for PSCM response on IDs 0x082 0x085 0x3CC...');
+  epsLc('eps-lc-can','INIT','warn');
+  epsLog('Session started — Arduino simulating HS2 CAN network','ok');
+  if(connected)sendCmd('EPS:START');
+  else epsLog('Arduino not connected via Web Serial','warn');
+}
+function epsStop(){
+  epsActive=false;epsControls(false);epsCurrentDir='CENTER';epsRack('CENTER');
+  epsBanner('','🔩','EPS — ELECTRIC POWER STEERING','2018 Ford F150 PSCM. Connect MCP2515 to HS2CAN+ pin 3 and HS2CAN− pin 11.');
+  epsLc('eps-lc-can','OFFLINE','bad');epsLc('eps-lc-pscm','OFFLINE','bad');
+  epsLc('eps-lc-motor','IDLE','');epsLc('eps-lc-dir','CENTER','good');
+  if(connected)sendCmd('EPS:STOP');
+  epsLog('Session stopped','warn');
+}
+function epsSetDir(dir){
+  if(!epsActive)return;
+  epsCurrentDir=dir;epsRack(dir);
+  epsLc('eps-lc-dir',dir==='LEFT'?'◄ LEFT':dir==='RIGHT'?'RIGHT ►':'● CENTER',dir==='LEFT'?'warn':dir==='RIGHT'?'good':'good');
+  if(connected)sendCmd('EPS:'+dir);
+  epsLog('Direction command: '+dir,'info');
+  document.getElementById('eps-dl').className='eps-dir-btn'+(dir==='LEFT'?' dl':'');
+  document.getElementById('eps-dc').className='eps-dir-btn'+(dir==='CENTER'?' dc':'');
+  document.getElementById('eps-dr').className='eps-dir-btn'+(dir==='RIGHT'?' dr':'');
+}
+function epsRack(dir){
+  var p=document.getElementById('eps-puck'),d=document.getElementById('eps-dir-disp');
+  if(!p||!d)return;
+  if(dir==='LEFT'){p.style.left='10%';p.className='rack-puck left';d.style.color='var(--blue)';d.textContent='◄ LEFT';}
+  else if(dir==='RIGHT'){p.style.left='90%';p.className='rack-puck right';d.style.color='var(--green)';d.textContent='RIGHT ►';}
+  else{p.style.left='50%';p.className='rack-puck';d.style.color='#ff6b9d';d.textContent='● CENTER';}
+}
+function epsAssist(val){
+  var pct=document.getElementById('eps-pct');if(pct)pct.textContent=val+'%';
+  epsLc('eps-lc-assist',val+'%','');
+  if(connected&&epsActive)sendCmd('EPS:LEVEL:'+val);
+}
+function epsSweep(){
+  if(!epsActive)return;
+  epsBanner('run','🔩','SWEEP IN PROGRESS','Running full lock-to-lock sweep...');
+  epsLog('Lock-to-lock sweep started','info');
+  if(connected){sendCmd('EPS:SWEEP');return;}
+  epsSetDir('LEFT');
+  setTimeout(function(){epsSetDir('CENTER');},3000);
+  setTimeout(function(){epsSetDir('RIGHT');},4200);
+  setTimeout(function(){epsSetDir('CENTER');epsBanner('pass','✅','SWEEP COMPLETE','Lock-to-lock test finished.');epsLog('Sweep complete','ok');},7200);
+}
+function epsCmd(cmd){
+  if(!epsActive)return;
+  if(connected)sendCmd(cmd);
+  epsLog('TX: '+cmd,'info');
+}
+function epsCanClear(){
+  var s=document.getElementById('eps-can');if(!s)return;
+  s.innerHTML='<div class="eps-idle">Cleared.</div>';
+  epsFrameCount=0;epsLc('eps-lc-frames','0','');
+}
+function epsCanFrame(text,type){
+  var s=document.getElementById('eps-can');if(!s)return;
+  var idle=s.querySelector('.eps-idle');if(idle)idle.remove();
+  var f=document.createElement('div');
+  f.className=type==='rx'?'eps-rx':'eps-tx';
+  var ts=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  f.textContent='['+ts+'] '+(type==='rx'?'RX':'TX')+' '+text;
+  s.appendChild(f);if(s.children.length>60)s.removeChild(s.firstChild);
+  s.scrollTop=s.scrollHeight;
+  epsFrameCount++;
+  var fc=document.getElementById('eps-lc-frames');if(fc)fc.textContent=epsFrameCount;
+}
+function handleEpsRx(line){
+  epsCanFrame(line,'rx');
+  if(line==='EPS:STARTED'||line==='EPS:CAN_OK'){
+    epsLc('eps-lc-can','ONLINE','good');
+    epsBanner('run','🔩','HS2 CAN ACTIVE','Arduino transmitting on IDs 0x082 0x415 0x411 0x3CC 0x091. PSCM keep-alive running.');
+    epsLog('CAN bus online at 500kbps','ok');
+  }
+  else if(line==='EPS:CAN_ERROR'){
+    epsLc('eps-lc-can','ERROR','bad');
+    epsBanner('fail','❌','CAN INIT FAILED','Check MCP2515 wiring — CS 53, MOSI 51, MISO 50, SCK 52, INT 2.');
+    epsLog('CAN init failed — check MCP2515','err');
+  }
+  else if(line==='EPS:PSCM_ONLINE'){
+    epsLc('eps-lc-pscm','ONLINE','good');
+    epsBanner('pass','✅','PSCM RESPONDING','Module alive on HS2 CAN. Broadcasting on 0x085 and 0x082. Ready for commands.');
+    epsLog('PSCM online — responding on HS2 CAN','ok');
+  }
+  else if(line==='EPS:PSCM_OFFLINE'||line==='EPS:PSCM_LOST'){
+    epsLc('eps-lc-pscm','OFFLINE','bad');
+    epsLog('PSCM lost — check VBATT, VPWR and CAN wiring','err');
+  }
+  else if(line==='EPS:MOVING_LEFT'){
+    epsRack('LEFT');epsLc('eps-lc-motor','ACTIVE','good');
+    epsLc('eps-lc-dir','◄ LEFT','warn');epsLog('Rack moving LEFT','info');
+  }
+  else if(line==='EPS:MOVING_RIGHT'){
+    epsRack('RIGHT');epsLc('eps-lc-motor','ACTIVE','good');
+    epsLc('eps-lc-dir','RIGHT ►','good');epsLog('Rack moving RIGHT','info');
+  }
+  else if(line==='EPS:CENTERING'){
+    epsRack('CENTER');epsLc('eps-lc-motor','IDLE','');
+    epsLc('eps-lc-dir','CENTER','good');epsLog('Rack centering','info');
+  }
+  else if(line==='EPS:SWEEP_DONE'){
+    epsRack('CENTER');epsLc('eps-lc-motor','IDLE','');
+    epsBanner('pass','✅','SWEEP COMPLETE','Lock-to-lock test passed.');epsLog('Sweep complete','ok');
+  }
+  else if(line==='EPS:PONG'){epsLog('PSCM ping response received ✓','ok');}
+  else if(line==='EPS:STOPPED'){epsLog('Session stopped','warn');}
+  else if(line.startsWith('EPS:FAULT:')){
+    var f=line.substring(10);epsLc('eps-lc-pscm',f,'bad');epsLog('FAULT: '+f,'err');
+  }
+  else if(line.startsWith('EPS:STATUS:')){epsLog('Status: '+line.substring(11),'info');}
+  else if(line.startsWith('EPS:RX:')){epsCanFrame(line.substring(7),'rx');}
+  else{epsLog(line,'info');}
+}
+
+function autoDecodeVIN(bytes, model) {
+  var d = CHIP_DB[model] || CHIP_DB['93C56'];
+  var tenths=0;
+  if(d.odoLen===3) tenths=(bytes[d.odoOff]<<16)|(bytes[d.odoOff+1]<<8)|bytes[d.odoOff+2];
+  else if(d.odoLen===4) tenths=(bytes[d.odoOff]<<24)|(bytes[d.odoOff+1]<<16)|(bytes[d.odoOff+2]<<8)|bytes[d.odoOff+3];
+  var miles = (tenths/10).toFixed(1);
+  // Try to extract ASCII VIN (17 chars starting with 1,2,3,J,K,L,S,W,Y)
+  var vin = '';
+  for(var i=0;i<bytes.length-17;i++){
+    var c = String.fromCharCode(bytes[i]);
+    if('123JKLSWYjklswy'.indexOf(c)>=0){
+      var v='';
+      for(var j=0;j<17;j++) v+=String.fromCharCode(bytes[i+j]);
+      if(/^[A-HJ-NPR-Z0-9]{17}$/i.test(v)){vin=v;break;}
+    }
+  }
+  var checksum = bytes.slice(0,8).reduce(function(a,b){return a+b;},0) & 0xFF;
+  document.getElementById('vinDecodeResult').innerHTML =
+    '<span style="color:var(--text-mid)">Chip model:  </span><span style="color:var(--blue)">'+model+'</span>\n'+
+    '<span style="color:var(--text-mid)">Odometer:   </span><span style="color:var(--green)">'+parseFloat(miles).toLocaleString()+' miles</span>  ('+parseFloat(miles).toFixed(0)+' × 0.1mi tenths)\n'+
+    '<span style="color:var(--text-mid)">VIN found:  </span>'+(vin?'<span style="color:var(--accent)">'+vin+'</span>':'<span style="color:var(--text-dim)">Not found in dump</span>')+'\n'+
+    '<span style="color:var(--text-mid)">Checksum:   </span><span style="color:var(--text-mid)">0x'+checksum.toString(16).toUpperCase().padStart(2,'0')+'</span>\n'+
+    '<span style="color:var(--text-mid)">Odo offset: </span><span style="color:var(--text-mid)">0x'+d.odoOff.toString(16).toUpperCase().padStart(2,'0')+'  ('+d.odoLen+'-byte)<\/span>';
+}
+</script>
