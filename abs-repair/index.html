@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&family=Share+Tech+Mono&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
+html{color-scheme:dark;}
 :root{
   --bg:#0a0c0f;--surface:#111418;--surface2:#181c22;--border:#1e2530;--border2:#2a3446;
   --accent:#e8a020;--accent2:#ff4d1c;--green:#1aff8c;
@@ -27,7 +28,7 @@ h2{font-size:clamp(1.4rem,3.2vw,2rem);margin-bottom:12px;}
 h3{font-size:0.95rem;margin-bottom:8px;}
 .eyebrow{font-family:'Share Tech Mono',monospace;color:var(--accent);font-size:0.8rem;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:8px;display:block;}
 .lead{color:var(--text-mid);max-width:680px;}
-section{padding:72px 0;border-top:1px solid var(--border);}
+section{padding:72px 0;border-top:1px solid var(--border);scroll-margin-top:64px;}
 
 /* Buttons */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:'Orbitron',sans-serif;font-weight:700;font-size:0.78rem;letter-spacing:0.1em;text-transform:uppercase;padding:14px 22px;border-radius:6px;border:1px solid var(--accent);cursor:pointer;transition:all .2s;text-decoration:none!important;}
@@ -37,7 +38,7 @@ section{padding:72px 0;border-top:1px solid var(--border);}
 .btn-ghost:hover{background:rgba(232,160,32,.1);}
 
 /* Header */
-header{position:sticky;top:0;z-index:100;background:rgba(10,12,15,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:100;background:rgba(10,12,15,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);}
 .nav{display:flex;align-items:center;gap:16px;height:64px;}
 .logo{font-family:'Orbitron',sans-serif;font-weight:900;color:var(--accent);letter-spacing:0.12em;font-size:0.95rem;display:flex;align-items:center;gap:10px;text-decoration:none!important;}
 .logo-ring{width:28px;height:28px;border:2px solid var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.5rem;box-shadow:0 0 12px rgba(232,160,32,.4);}
@@ -88,6 +89,24 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,12,15,.94);backdrop-
 .card p,.card li{color:var(--text-mid);font-size:0.95rem;}
 .card ul{padding-left:18px;}
 .icon{font-size:1.5rem;margin-bottom:10px;display:block;}
+
+/* Service cards */
+.svc{display:flex;flex-direction:column;gap:10px;}
+.svc .badge{align-self:flex-start;font-family:'Orbitron',sans-serif;font-weight:900;font-size:0.7rem;letter-spacing:.12em;color:var(--accent);border:2px solid var(--accent);border-radius:999px;padding:6px 12px;}
+.svc p{flex:1;}
+.svc .from{font-family:'Share Tech Mono',monospace;color:var(--text);font-size:0.9rem;}
+.svc .from b{color:var(--accent);font-weight:400;font-size:1.1rem;}
+.svc-actions{display:flex;gap:10px;flex-wrap:wrap;}
+.svc-actions .btn{padding:10px 14px;font-size:0.66rem;}
+
+/* Product line tabs */
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px;}
+.tab{font-family:'Orbitron',sans-serif;font-weight:700;font-size:0.7rem;letter-spacing:.1em;text-transform:uppercase;padding:10px 16px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text-mid);cursor:pointer;}
+.tab:hover{color:#fff;border-color:var(--accent);}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#000;}
+.tab:focus-visible,.btn:focus-visible{outline:2px solid var(--green);outline-offset:2px;}
+.sub{font-family:'Share Tech Mono',monospace;color:var(--accent);font-size:0.8rem;letter-spacing:.14em;text-transform:uppercase;margin:44px 0 0;}
+.fineprint{margin-top:18px;color:var(--text-dim);font-size:0.88rem;}
 
 /* Steps */
 .step-num{font-family:'Orbitron',sans-serif;font-weight:900;color:var(--accent);font-size:1.6rem;margin-bottom:6px;}
@@ -156,9 +175,8 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 
 <!--
   ================================================================
-  EDIT YOUR BUSINESS INFO HERE — see the SITE object in the
-  <script> at the bottom of this file. Name, phone, email, ship-to
-  address, hours, prices, turnaround and warranty all live there.
+  ALL CONTENT LIVES IN products.js — business info (SITE) and
+  product lines (PRODUCT_LINES). Edit that file, not this one.
   ================================================================
 -->
 
@@ -166,10 +184,9 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
   <div class="wrap nav">
     <a href="#top" class="logo"><span class="logo-ring">ABS</span><span data-site="name">ABS Module Repair</span></a>
     <nav class="nav-links" id="navLinks">
-      <a href="#symptoms">Symptoms</a>
-      <a href="#process">How It Works</a>
+      <a href="#services">Services</a>
       <a href="#pricing">Pricing</a>
-      <a href="#vehicles">Vehicles</a>
+      <a href="#process">How It Works</a>
       <a href="#faq">FAQ</a>
     </nav>
     <a href="#quote" class="btn btn-primary">Get a Quote</a>
@@ -188,12 +205,13 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
       <p>We bench test and rebuild failed ABS control modules for a fraction of dealer replacement cost. Your original module comes back with its original programming — plug it in and drive. No dealer visit, no VIN coding.</p>
       <div class="hero-ctas">
         <a href="#quote" class="btn btn-primary">Start a Repair</a>
-        <a href="tel:" data-site-href="tel" class="btn btn-ghost">Call <span data-site="phone">(555) 555-5555</span></a>
+        <a href="#services" class="btn btn-ghost">What We Repair</a>
       </div>
       <div class="trust">
         <span><b>✓</b> <span data-site="warranty">Lifetime</span> warranty</span>
         <span><b>✓</b> <span data-site="turnaround">1–2 business day</span> turnaround</span>
         <span><b>✓</b> No reprogramming</span>
+        <span><b>✓</b> Call <a href="tel:" data-site-href="tel"><span data-site="phone">(555) 555-5555</span></a></span>
       </div>
     </div>
     <div class="dash" aria-hidden="true">
@@ -214,20 +232,22 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
   </div>
 </section>
 
-<!-- SYMPTOMS -->
-<section id="symptoms">
+<!-- SERVICES (built from products.js) -->
+<section id="services">
   <div class="wrap">
-    <span class="eyebrow">Is it the module?</span>
-    <h2>Common signs of a failed ABS module</h2>
-    <p class="lead">Wheel speed sensors and wiring fail too — but if you see these symptoms together with the codes below, the control module is the most likely cause.</p>
-    <div class="grid g3">
-      <div class="card"><span class="icon">⚠️</span><h3>ABS / Brake / Traction lights</h3><p>Warning lights that stay on, or come and go with bumps, heat, or cold starts.</p></div>
-      <div class="card"><span class="icon">📉</span><h3>Speedometer drops out</h3><p>On many trucks the ABS module supplies vehicle speed — a bad module can kill the speedometer and cruise control.</p></div>
-      <div class="card"><span class="icon">🔌</span><h3>No communication</h3><p>Scan tool can't talk to the ABS module, or you see U-codes for lost communication with the ABS/EBCM.</p></div>
-      <div class="card"><span class="icon">🛑</span><h3>Pump runs nonstop or never</h3><p>ABS pump motor won't shut off, or never runs during self-test. Often a failed relay or driver on the circuit board.</p></div>
-      <div class="card"><span class="icon">🧊</span><h3>Intermittent faults</h3><p>Cracked solder joints from heat cycling cause faults that appear and disappear — classic module failure.</p></div>
-      <div class="card"><span class="icon">🧾</span><h3>Failed inspection</h3><p>An ABS warning lamp is a fail item in many states. A repair gets you back on the road quickly.</p></div>
-    </div>
+    <span class="eyebrow">What we repair</span>
+    <h2>Modules we repair</h2>
+    <p class="lead">Pick your module to see common symptoms, pricing, and the vehicles we cover.</p>
+    <div class="grid g3" id="serviceCards"></div>
+  </div>
+</section>
+
+<!-- PRODUCT LINE DETAIL (built from products.js) -->
+<section id="pricing">
+  <div class="wrap">
+    <div class="tabs" id="lineTabs" role="tablist"></div>
+    <div id="linePanel"></div>
+    <p class="fineprint">Price includes diagnosis, repair, bench test, and return shipping within the continental US. If we can't repair it, you only pay the <span data-site="evalFee">$45</span> evaluation fee.</p>
   </div>
 </section>
 
@@ -238,7 +258,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
     <h2>Four steps. Usually back on the road in under a week.</h2>
     <div class="grid g4">
       <div class="card"><div class="step-num">01</div><h3>Request a repair</h3><p>Fill out the form below with your vehicle and codes. We confirm we can fix it and give you a price.</p></div>
-      <div class="card"><div class="step-num">02</div><h3>Remove &amp; ship</h3><p>On most vehicles the electronic module unbolts from the hydraulic unit — no brake lines opened. Ship it to us.</p></div>
+      <div class="card"><div class="step-num">02</div><h3>Remove &amp; ship</h3><p>Remove the module and ship it to us. For ABS modules, most units unbolt from the hydraulic unit with no brake lines opened.</p></div>
       <div class="card"><div class="step-num">03</div><h3>Repair &amp; bench test</h3><p>We diagnose, repair the failed circuits, reinforce known weak points, and verify on our test bench.</p></div>
       <div class="card"><div class="step-num">04</div><h3>Reinstall &amp; drive</h3><p>We ship it back. Bolt it on, plug it in, clear codes. Your original programming is intact.</p></div>
     </div>
@@ -249,74 +269,6 @@ City, ST 00000</span>
 
 Include a note with: your name, phone, email, return address, vehicle year/make/model, and the codes or symptoms.
 Pack the module in a box with at least 2" of padding on all sides. Do not ship in a bag or envelope.</div>
-  </div>
-</section>
-
-<!-- PRICING -->
-<section id="pricing">
-  <div class="wrap">
-    <span class="eyebrow">Pricing</span>
-    <h2>Flat-rate pricing. No surprises.</h2>
-    <p class="lead">Price includes diagnosis, repair, bench test, and return shipping within the continental US. If we can't repair it, you only pay the evaluation fee.</p>
-    <div class="grid g3">
-      <div class="card price-card">
-        <h3>Standard Repair</h3>
-        <div class="price"><span data-site="priceStandard">$129</span> <small>flat rate</small></div>
-        <ul>
-          <li>Most domestic ABS / EBCM modules</li>
-          <li><span data-site="turnaround">1–2 business day</span> turnaround</li>
-          <li>Free return shipping</li>
-          <li><span data-site="warranty">Lifetime</span> warranty</li>
-        </ul>
-        <a href="#quote" class="btn btn-ghost">Start Repair</a>
-      </div>
-      <div class="card price-card featured">
-        <span class="tag">MOST POPULAR</span>
-        <h3>Rush Repair</h3>
-        <div class="price"><span data-site="priceRush">$169</span> <small>flat rate</small></div>
-        <ul>
-          <li>Everything in Standard</li>
-          <li>Same-day repair on arrival</li>
-          <li>Priority return shipping</li>
-          <li><span data-site="warranty">Lifetime</span> warranty</li>
-        </ul>
-        <a href="#quote" class="btn btn-primary">Start Rush Repair</a>
-      </div>
-      <div class="card price-card">
-        <h3>Import / Euro</h3>
-        <div class="price"><span data-site="priceImport">$189</span> <small>starting at</small></div>
-        <ul>
-          <li>BMW, Mercedes, VW/Audi, Toyota, Honda &amp; more</li>
-          <li>Pump motor &amp; board-level repair</li>
-          <li>Free return shipping</li>
-          <li><span data-site="warranty">Lifetime</span> warranty</li>
-        </ul>
-        <a href="#quote" class="btn btn-ghost">Get a Quote</a>
-      </div>
-    </div>
-    <p style="margin-top:18px;color:var(--text-dim);font-size:0.88rem;">Evaluation fee if unrepairable: <span data-site="evalFee">$45</span>. Dealer replacement for these modules typically runs $800–$2,000+ installed.</p>
-  </div>
-</section>
-
-<!-- VEHICLES -->
-<section id="vehicles">
-  <div class="wrap">
-    <span class="eyebrow">Coverage</span>
-    <h2>Common modules we repair</h2>
-    <p class="lead">Don't see yours? Send us the part number from the module label — we repair many more than listed here.</p>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Make</th><th>Common vehicles</th><th>Typical codes</th></tr></thead>
-        <tbody>
-          <tr><td>Chevrolet / GMC</td><td>Silverado, Sierra, Tahoe, Yukon, Suburban, Avalanche, Trailblazer, Envoy</td><td class="mono">C0265, C0110, C0267, C0201</td></tr>
-          <tr><td>Cadillac / Buick / Hummer</td><td>Escalade, Rainier, H2, H3</td><td class="mono">C0265, C0110</td></tr>
-          <tr><td>Ford / Lincoln</td><td>F-150, F-250, Expedition, Explorer, Ranger, Navigator</td><td class="mono">C1095, C1185, C1233, U0121</td></tr>
-          <tr><td>Dodge / Ram / Jeep / Chrysler</td><td>Ram 1500–3500, Durango, Dakota, Grand Cherokee, Liberty</td><td class="mono">C1014, C2114, U0121</td></tr>
-          <tr><td>BMW / Mini</td><td>3-Series, 5-Series, X3, X5</td><td class="mono">ABS / DSC / Brake lights</td></tr>
-          <tr><td>Toyota / Lexus / Honda / Nissan</td><td>Tacoma, Tundra, 4Runner, Accord, Pathfinder</td><td class="mono">Call with codes</td></tr>
-        </tbody>
-      </table>
-    </div>
   </div>
 </section>
 
@@ -372,14 +324,12 @@ Pack the module in a box with at least 2" of padding on all sides. Do not ship i
         <div class="full"><label for="f-email">Email *</label><input id="f-email" name="email" type="email" required autocomplete="email"></div>
         <div><label for="f-year">Year *</label><input id="f-year" name="year" inputmode="numeric" maxlength="4" required placeholder="2007"></div>
         <div><label for="f-make">Make *</label><input id="f-make" name="make" required placeholder="Chevrolet"></div>
-        <div><label for="f-model">Model *</label><input id="f-model" name="model" required placeholder="Silverado 1500"></div>
+        <div class="full"><label for="f-model">Model *</label><input id="f-model" name="model" required placeholder="Silverado 1500"></div>
+        <div><label for="f-module">Module type *</label>
+          <select id="f-module" name="module_type" required></select>
+        </div>
         <div><label for="f-service">Service</label>
-          <select id="f-service" name="service">
-            <option>Standard Repair</option>
-            <option>Rush Repair</option>
-            <option>Import / Euro</option>
-            <option>Not sure — need diagnosis help</option>
-          </select>
+          <select id="f-service" name="service"></select>
         </div>
         <div class="full"><label for="f-codes">Trouble codes (if known)</label><input id="f-codes" name="codes" placeholder="C0265, C0110"></div>
         <div class="full"><label for="f-part">Module part number (from label, optional)</label><input id="f-part" name="part_number"></div>
@@ -404,24 +354,14 @@ Pack the module in a box with at least 2" of padding on all sides. Do not ship i
   <a href="#quote">Get a Quote</a>
 </div>
 
+<script src="products.js"></script>
 <script>
-/* ================================================================
-   YOUR BUSINESS INFO — edit these values and redeploy.
-   Every element tagged data-site="key" on the page is filled from here.
-   ================================================================ */
-var SITE = {
-  name:          "ABS Module Repair",
-  phone:         "(555) 555-5555",
-  email:         "repairs@example.com",
-  hours:         "Mon–Fri 9am–6pm",
-  shipTo:        "Your Business Name\n123 Main St\nCity, ST 00000",
-  turnaround:    "1–2 business day",
-  warranty:      "Lifetime",
-  priceStandard: "$129",
-  priceRush:     "$169",
-  priceImport:   "$189",
-  evalFee:       "$45"
-};
+/* Page logic. Content lives in products.js — you shouldn't need to edit this. */
+function esc(t){ return String(t).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function fill(t){ return esc(t).replace(/\{(\w+)\}/g, function(m,k){ return SITE[k] != null ? esc(SITE[k]) : m; }); }
+
+var LINES = PRODUCT_LINES.filter(function(p){ return p.enabled !== false; });
+var NOT_SURE = 'Not sure — need diagnosis help';
 
 document.querySelectorAll('[data-site]').forEach(function(el){
   var v = SITE[el.getAttribute('data-site')];
@@ -432,7 +372,84 @@ document.querySelectorAll('[data-site-href]').forEach(function(el){
   if (t === 'tel') el.href = 'tel:' + SITE.phone.replace(/[^0-9+]/g, '');
   if (t === 'mailto') el.href = 'mailto:' + SITE.email;
 });
-document.title = SITE.name + ' — Mail-In ABS / EBCM Repair Service';
+
+/* Service cards */
+document.getElementById('serviceCards').innerHTML = LINES.map(function(p){
+  var low = p.tiers.length ? p.tiers[0].price : '';
+  return '<div class="card svc">' +
+    '<span class="badge">' + esc(p.code) + '</span>' +
+    '<h3>' + esc(p.name) + '</h3>' +
+    '<p>' + fill(p.blurb) + '</p>' +
+    (low ? '<div class="from">From <b>' + esc(low) + '</b></div>' : '') +
+    '<div class="svc-actions">' +
+      '<a href="#pricing" class="btn btn-ghost" data-show="' + esc(p.id) + '">Details &amp; Pricing</a>' +
+      '<a href="#quote" class="btn btn-primary" data-quote="' + esc(p.id) + '">Get a Quote</a>' +
+    '</div></div>';
+}).join('');
+
+/* Tabs + detail panel */
+var tabs = document.getElementById('lineTabs'), panel = document.getElementById('linePanel');
+tabs.hidden = LINES.length < 2;
+tabs.innerHTML = LINES.map(function(p){
+  return '<button class="tab" role="tab" type="button" data-tab="' + esc(p.id) + '">' + esc(p.name) + '</button>';
+}).join('');
+
+function showLine(id){
+  var p = LINES.filter(function(x){ return x.id === id; })[0] || LINES[0];
+  if (!p) return;
+  tabs.querySelectorAll('.tab').forEach(function(t){ t.setAttribute('aria-selected', t.getAttribute('data-tab') === p.id); });
+  var cols = p.tiers.length === 2 ? ' style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))"' : '';
+  panel.innerHTML =
+    '<span class="eyebrow">' + esc(p.code) + ' · Pricing</span>' +
+    '<h2>' + esc(p.name) + '</h2>' +
+    '<p class="lead">' + fill(p.blurb) + '</p>' +
+    '<div class="grid g3"' + cols + '>' + p.tiers.map(function(t){
+      return '<div class="card price-card' + (t.featured ? ' featured' : '') + '">' +
+        (t.featured ? '<span class="tag">MOST POPULAR</span>' : '') +
+        '<h3>' + esc(t.name) + '</h3>' +
+        '<div class="price">' + esc(t.price) + ' <small>' + esc(t.unit || '') + '</small></div>' +
+        '<ul>' + t.features.map(function(f){ return '<li>' + fill(f) + '</li>'; }).join('') + '</ul>' +
+        '<a href="#quote" class="btn ' + (t.featured ? 'btn-primary' : 'btn-ghost') + '" data-quote="' + esc(p.id) + '" data-tier="' + esc(t.name) + '">Start ' + esc(t.name) + '</a>' +
+      '</div>';
+    }).join('') + '</div>' +
+    (p.symptoms && p.symptoms.length ? '<h3 class="sub">Common signs of failure</h3><div class="grid g3">' + p.symptoms.map(function(x){
+      return '<div class="card"><h3>' + fill(x.title) + '</h3><p>' + fill(x.text) + '</p></div>';
+    }).join('') + '</div>' : '') +
+    (p.vehicles && p.vehicles.length ? '<h3 class="sub">Vehicles we cover</h3><div class="table-wrap"><table><thead><tr><th>Make</th><th>Common vehicles</th><th>Typical codes / symptoms</th></tr></thead><tbody>' +
+      p.vehicles.map(function(v){ return '<tr><td>' + esc(v.make) + '</td><td>' + esc(v.models) + '</td><td class="mono">' + esc(v.codes) + '</td></tr>'; }).join('') +
+      '</tbody></table></div><p class="fineprint">Don\'t see yours? Send the part number from the module label. We repair many more than listed.</p>' : '');
+}
+tabs.addEventListener('click', function(e){
+  var b = e.target.closest('[data-tab]'); if (b) showLine(b.getAttribute('data-tab'));
+});
+
+/* Quote form dropdowns */
+var fModule = document.getElementById('f-module'), fService = document.getElementById('f-service');
+fModule.innerHTML = LINES.map(function(p){ return '<option value="' + esc(p.name) + '" data-id="' + esc(p.id) + '">' + esc(p.name) + '</option>'; }).join('') +
+  '<option value="Other / not listed" data-id="">Other / not listed</option>';
+function fillTiers(){
+  var id = fModule.selectedOptions[0] && fModule.selectedOptions[0].getAttribute('data-id');
+  var p = LINES.filter(function(x){ return x.id === id; })[0];
+  var names = (p ? p.tiers.map(function(t){ return t.name; }) : []).concat([NOT_SURE]);
+  fService.innerHTML = names.map(function(n){ return '<option>' + esc(n) + '</option>'; }).join('');
+}
+fModule.addEventListener('change', fillTiers);
+
+/* Card / tier buttons: jump to detail or preselect the form */
+document.addEventListener('click', function(e){
+  var s = e.target.closest('[data-show]'); if (s) showLine(s.getAttribute('data-show'));
+  var q = e.target.closest('[data-quote]');
+  if (q) {
+    var opt = fModule.querySelector('[data-id="' + q.getAttribute('data-quote') + '"]');
+    if (opt) { fModule.value = opt.value; fillTiers(); }
+    if (q.getAttribute('data-tier')) fService.value = q.getAttribute('data-tier');
+  }
+});
+
+showLine(LINES[0] && LINES[0].id);
+fillTiers();
+
+document.title = SITE.name + ' — Mail-In Module Repair Service';
 document.getElementById('yr').textContent = new Date().getFullYear();
 
 var menuBtn = document.getElementById('menuBtn'), navLinks = document.getElementById('navLinks');
