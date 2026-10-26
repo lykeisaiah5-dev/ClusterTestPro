@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Micro Labs — Mail-In ABS Module Repair (Prototype)</title>
+<meta name="description" content="Mail-in ABS module repair service. Find a repair service by vehicle or module part number, review eligibility and the mail-in process, and send us your original module.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header id="site-header"></header>
+
+<main id="main">
+
+  <!-- ============ 1. HERO (Shopify: sections/hero-finder.liquid) ============ -->
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="hero-media">
+      <div class="img-ph dark" role="img" aria-label="Photo placeholder: ABS module on an electronics repair bench">
+        <div>
+          <span data-icon="camera" data-icon-class="i-lg"></span>
+          <b>Photo needed · Hero</b>
+          <span>Your own photo: an ABS module on the repair bench, label legible, inspection tools in frame. Landscape, 2400 × 1400 px minimum.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="container hero-inner">
+      <div class="hero-panel on-dark">
+        <div class="eyebrow">Mail-in ABS module repair · St. Louis</div>
+        <h1 id="hero-title">ABS Module Repair. <span class="soft">Clear Answers. A Straightforward Process.</span></h1>
+        <p class="lede">Find a repair service for your original ABS module. Check compatibility, review the repair details, and follow our mail-in instructions.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-primary" href="#find">Find My Repair <span data-icon="arrow"></span></a>
+          <a class="btn btn-outline-light" href="#contact">Ask About My Module</a>
+        </div>
+
+        <!-- Vehicle / part-number finder -->
+        <div class="finder" id="find">
+          <div class="finder-head">
+            <h2>Find My Repair</h2>
+            <span class="chip chip-dark-sample">Sample data</span>
+          </div>
+          <div class="tabs" role="tablist" aria-label="Search method">
+            <button type="button" role="tab" id="tab-vehicle" aria-selected="true" aria-controls="panel-vehicle"><span data-icon="car"></span>By vehicle</button>
+            <button type="button" role="tab" id="tab-pn" aria-selected="false" aria-controls="panel-pn" tabindex="-1"><span data-icon="hash"></span>By part number</button>
+          </div>
+
+          <form id="panel-vehicle" role="tabpanel" aria-labelledby="tab-vehicle" novalidate>
+            <div class="finder-row">
+              <div>
+                <label class="dark-label" for="f-year">Year</label>
+                <select class="select-dark" id="f-year" name="year"><option value="">Year</option></select>
+              </div>
+              <div>
+                <label class="dark-label" for="f-make">Make</label>
+                <select class="select-dark" id="f-make" name="make" disabled><option value="">Make</option></select>
+              </div>
+              <div>
+                <label class="dark-label" for="f-model">Model</label>
+                <select class="select-dark" id="f-model" name="model" disabled><option value="">Model</option></select>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-block" type="submit"><span data-icon="search"></span>Show Repair Services</button>
+            <p class="finder-error" id="vehicle-error" role="alert" hidden></p>
+          </form>
+
+          <form id="panel-pn" role="tabpanel" aria-labelledby="tab-pn" hidden novalidate>
+            <label class="dark-label" for="f-pn">Module part number (from the label on your module)</label>
+            <div class="finder-row" style="grid-template-columns:1fr">
+              <input class="input-dark mono" id="f-pn" name="pn" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. SAMPLE-A100">
+            </div>
+            <button class="btn btn-primary btn-block" type="submit"><span data-icon="search"></span>Search Part Number</button>
+            <p class="finder-error" id="pn-error" role="alert" hidden></p>
+          </form>
+
+          <p class="finder-note"><span data-icon="info"></span><span>Only vehicles with a listed repair service appear here. A vehicle match narrows the list but may not confirm compatibility — the part number on your module label decides.</span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Finder results -->
+  <section class="results" id="results" hidden aria-live="polite">
+    <div class="container">
+      <div class="results-head">
+        <h2 id="results-title" tabindex="-1">Results</h2>
+        <a class="link-arrow" href="#find">Change search <span data-icon="arrow"></span></a>
+      </div>
+      <div id="results-body"></div>
+    </div>
+  </section>
+
+  <!-- ============ 2. SERVICE REASSURANCE ============ -->
+  <section class="assure" aria-label="Before you order">
+    <div class="container">
+      <ul>
+        <li><a href="#faq-eligible"><span data-icon="list"></span><span><b>Repair eligibility</b><small>How to confirm your module</small></span><span class="go" data-icon="chevronRight"></span></a></li>
+        <li><a href="#" data-pending="Shipping Instructions page"><span data-icon="package"></span><span><b>Shipping instructions</b><small>Packing and sending your module</small></span><span class="go" data-icon="chevronRight"></span></a></li>
+        <li><a href="#faq-warranty"><span data-icon="shield"></span><span><b>Warranty information</b><small>What the repair warranty covers</small></span><span class="go" data-icon="chevronRight"></span></a></li>
+        <li><a href="#contact"><span data-icon="headset"></span><span><b>Contact support</b><small>Ask before you order</small></span><span class="go" data-icon="chevronRight"></span></a></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 3. HOW IT WORKS ============ -->
+  <section class="section" id="process" aria-labelledby="process-title">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">How the mail-in process works</div>
+          <h2 id="process-title">You keep your original module.<br>We repair it and send it back.</h2>
+        </div>
+        <p>You are purchasing a repair service, not a replacement part. Nothing ships from inventory — the module we return is the one you sent.</p>
+      </div>
+      <ol class="steps">
+        <li class="card step">
+          <div class="step-top"><span class="step-num">01</span><span class="step-ico" data-icon="search"></span></div>
+          <h3>Find and purchase the correct service</h3>
+          <p>Match your vehicle and the part number on your module label, then purchase the listed repair service.</p>
+          <p class="detail">Not sure it matches? <a href="#contact">Ask before ordering.</a></p>
+        </li>
+        <li class="card step">
+          <div class="step-top"><span class="step-num">02</span><span class="step-ico" data-icon="package"></span></div>
+          <h3>Package and send your module</h3>
+          <p>Follow the packing and shipping instructions included with your order confirmation.</p>
+          <p class="detail"><span class="ph">[Placeholder: who pays inbound shipping, required packaging, what to include in the box]</span></p>
+        </li>
+        <li class="card step">
+          <div class="step-top"><span class="step-num">03</span><span class="step-ico" data-icon="scope"></span></div>
+          <h3>We inspect, repair and test</h3>
+          <p>We inspect the module and perform the repair covered by the service you purchased, plus the testing that applies to it.</p>
+          <p class="detail"><span class="ph">[Placeholder: describe your confirmed inspection and testing steps]</span></p>
+        </li>
+        <li class="card step">
+          <div class="step-top"><span class="step-num">04</span><span class="step-ico" data-icon="truck"></span></div>
+          <h3>We return your module</h3>
+          <p>Your module ships back with the relevant service information for your records.</p>
+          <p class="detail"><span class="ph">[Placeholder: return shipping method and what paperwork is included]</span></p>
+        </li>
+      </ol>
+      <div class="callout">
+        <span data-icon="clock"></span>
+        <p><strong>Turnaround and shipping are separate.</strong> Turnaround starts <span class="ph">[Placeholder: e.g. when your module is received and checked in]</span> and is <span class="ph">[Placeholder: turnaround time]</span>. Shipping transit time each way is not included.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 4. FEATURED SERVICES (Shopify: featured collection) ============ -->
+  <section class="section section-white" id="services" aria-labelledby="services-title">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">Repair services</div>
+          <h2 id="services-title">Featured repair services</h2>
+        </div>
+        <p>Each service lists the vehicles and module part numbers it covers. If yours isn't listed, ask us before ordering.</p>
+      </div>
+      <div class="editor-note"><span data-icon="info"></span><span><strong>Sample data.</strong> These cards show layout only. Makes, models and part numbers are fictional and are not compatibility claims. Replace with your confirmed repair services.</span></div>
+      <div class="svc-grid" id="featured-grid"></div>
+    </div>
+  </section>
+
+  <!-- ============ 5. WHY MICRO LABS ============ -->
+  <section class="section" id="why" aria-labelledby="why-title">
+    <div class="container why">
+      <div class="why-media">
+        <div class="img-ph ratio-4x3" role="img" aria-label="Photo placeholder: board-level repair close-up"><span data-icon="camera" data-icon-class="i-lg"></span><b>Photo needed · Repair close-up</b><span>Your own photo of board-level work on an ABS module under magnification.</span></div>
+        <div class="img-ph ratio-4x3" role="img" aria-label="Photo placeholder: module label close-up"><span data-icon="camera" data-icon-class="i-lg"></span><b>Photo needed · Label close-up</b><span>A module label with the part number clearly readable.</span></div>
+      </div>
+      <div>
+        <div class="eyebrow">Why Micro Labs</div>
+        <h2 id="why-title">What you can check before you send anything</h2>
+        <p style="color:var(--muted);max-width:60ch;margin-bottom:28px">We would rather show you the details than ask you to take our word for it.</p>
+        <ul class="why-list">
+          <li class="card why-item"><span class="ico" data-icon="list"></span><div><h3>Clearly defined repair scope</h3><p>Every service page lists the part numbers, symptoms and fault codes it covers — and what it doesn't.</p></div></li>
+          <li class="card why-item"><span class="ico" data-icon="message"></span><div><h3>Transparent communication</h3><p>Questions about compatibility get a direct answer before you order.</p><span class="ph-block">[Placeholder: how and when customers hear from you after the module arrives]</span></div></li>
+          <li class="card why-item"><span class="ico" data-icon="camera"></span><div><h3>Real repair photographs</h3><p>Photos on this site show our actual work and modules.</p><span class="ph-block">[Placeholder: replace image placeholders with your own photographs before launch]</span></div></li>
+          <li class="card why-item"><span class="ico" data-icon="clipboard"></span><div><h3>Documented testing where applicable</h3><p>Each service states which tests apply to that repair.</p><span class="ph-block">[Placeholder: describe the testing you actually perform and how it is recorded]</span></div></li>
+          <li class="card why-item"><span class="ico" data-icon="headset"></span><div><h3>Accessible support</h3><p>Reach a person who knows the repair, before and after your order.</p><span class="ph-block">[Placeholder: phone, email and support hours]</span></div></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 6. REPAIR VS REPLACEMENT ============ -->
+  <section class="section section-dark on-dark" id="repair-vs-replace" aria-labelledby="rvr-title">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">Repair or replace?</div>
+          <h2 id="rvr-title">Repairing your original module may be an option</h2>
+        </div>
+        <p style="color:var(--on-dark-muted)">For eligible failures, repairing the module already in your vehicle can be an alternative to sourcing a replacement. Whether it fits your situation depends on the vehicle, the module and the fault.</p>
+      </div>
+      <div class="compare">
+        <div class="col-a">
+          <h3><span data-icon="wrench"></span>Repairing your original module</h3>
+          <ul>
+            <li><span data-icon="check"></span><span>You send the module from your vehicle and receive the same unit back.</span></li>
+            <li><span data-icon="check"></span><span>Only available for the part numbers and failures listed on each service page.</span></li>
+            <li><span data-icon="info"></span><span>Programming or setup needs vary by vehicle and module. Each service page states what applies. <span class="ph">[Placeholder: confirm per service]</span></span></li>
+            <li><span data-icon="info"></span><span>The vehicle is without the module while it is in transit and being repaired.</span></li>
+          </ul>
+        </div>
+        <div class="col-b">
+          <h3><span data-icon="refresh"></span>Replacing the module</h3>
+          <ul>
+            <li><span data-icon="info"></span><span>A different unit — new, used or remanufactured — is sourced and installed.</span></li>
+            <li><span data-icon="info"></span><span>Replacement modules may need programming, coding or setup for your vehicle.</span></li>
+            <li><span data-icon="info"></span><span>Availability and part-number matching depend on the supplier.</span></li>
+            <li><span data-icon="info"></span><span>May be the better route if the failure isn't one we list, or the module has physical damage.</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="compare-foot">
+        <p>Not sure which applies? Send us your part number, fault codes and symptoms and we'll tell you whether a listed repair service fits.</p>
+        <a class="btn btn-primary" href="#contact">Ask About My Module</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 7. CUSTOMER FEEDBACK — hidden on live site until real reviews exist ============ -->
+  <section class="section" id="reviews" aria-labelledby="reviews-title" data-publish="false">
+    <div class="container">
+      <div class="editor-note"><span data-icon="alert"></span><span><strong>Placeholder section — not published.</strong> This block stays hidden on the live store until genuine customer reviews are supplied (Shopify: section setting “Show section” off, or a reviews app with verified reviews).</span></div>
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">Customer feedback</div>
+          <h2 id="reviews-title">What customers say</h2>
+        </div>
+      </div>
+      <div class="reviews-grid">
+        <figure class="card review" style="margin:0"><span data-icon="quote" data-icon-class="quote-ico"></span><div class="lines" aria-hidden="true"><span></span><span></span><span></span></div><span class="ph">[Placeholder: genuine customer review 1]</span><footer>[Customer name, vehicle — with permission]</footer></figure>
+        <figure class="card review" style="margin:0"><span data-icon="quote" data-icon-class="quote-ico"></span><div class="lines" aria-hidden="true"><span></span><span></span><span></span></div><span class="ph">[Placeholder: genuine customer review 2]</span><footer>[Customer name, vehicle — with permission]</footer></figure>
+        <figure class="card review" style="margin:0"><span data-icon="quote" data-icon-class="quote-ico"></span><div class="lines" aria-hidden="true"><span></span><span></span><span></span></div><span class="ph">[Placeholder: genuine customer review 3]</span><footer>[Customer name, vehicle — with permission]</footer></figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 8. FAQ ============ -->
+  <section class="section section-white" id="faq" aria-labelledby="faq-title">
+    <div class="container faq-wrap">
+      <div class="faq-aside">
+        <div class="eyebrow">FAQ</div>
+        <h2 id="faq-title">Questions before you order</h2>
+        <p>Plain answers about eligibility, what you're buying, and what happens to your module.</p>
+        <a class="btn btn-outline" href="#contact"><span data-icon="headset"></span>Ask a Question</a>
+      </div>
+      <div class="faq-list">
+        <details id="faq-eligible">
+          <summary>How do I know whether my module is eligible?<span data-icon="chevron"></span></summary>
+          <div class="ans"><p>Find the part number printed on your module's label and match it to the part numbers listed on a repair service page. The vehicle finder helps narrow the list, but the part number is what confirms eligibility. Some faults also need to match the symptoms and codes the service covers.</p><p>If your part number isn't listed, or you're unsure, <a href="#contact">send us your details</a> before ordering.</p></div>
+        </details>
+        <details>
+          <summary>Am I purchasing a repair or a replacement?<span data-icon="chevron"></span></summary>
+          <div class="ans"><p>A repair. Every service on this site is a mail-in repair of your own module. We do not ship a module to you from inventory — you send us yours, and we return the same unit after the covered repair.</p></div>
+        </details>
+        <details>
+          <summary>What should I send?<span data-icon="chevron"></span></summary>
+          <div class="ans"><p>It depends on the service. Each service page states whether to send the electronic controller on its own or a complete assembly. Follow the “What to send” section for the service you purchase.</p><p><span class="ph">[Placeholder: general rules — e.g. what not to include, labeling, packaging]</span></p></div>
+        </details>
+        <details>
+          <summary>When does turnaround begin?<span data-icon="chevron"></span></summary>
+          <div class="ans"><p>Turnaround begins <span class="ph">[Placeholder: e.g. when your module is received and checked in]</span>. Shipping time to us and back to you is separate from turnaround.</p></div>
+        </details>
+        <details>
+          <summary>What happens if the module cannot be repaired?<span data-icon="chevron"></span></summary>
+          <div class="ans"><p><span class="ph">[Placeholder: your unrepairable-module policy — refund amount, any inspection or diagnostic fee, and how the module is returned]</span></p></div>
+        </details>
+        <details>
+          <summary>Will programming or calibration be required?<span data-icon="chevron"></span></summary>
+          <div class="ans"><p>It can depend on the vehicle, the module and what was done to it. Each service page includes programming and calibration guidance for that specific service. Some vehicles may require a setup or calibration procedure after reinstallation even when the original module is returned.</p><p><span class="ph">[Placeholder: any general guidance you have confirmed]</span></p></div>
+        </details>
+        <details id="faq-warranty">
+          <summary>What does the warranty cover?<span data-icon="chevron"></span></summary>
+          <div class="ans"><p><span class="ph">[Placeholder: verified warranty length, what it covers, what it excludes, and how to make a claim]</span></p><p>Full terms will be published on the Warranty page.</p></div>
+        </details>
+        <details>
+          <summary>How do I contact you before ordering?<span data-icon="chevron"></span></summary>
+          <div class="ans"><p>Use the <a href="#contact">inquiry form</a> below with your vehicle, part number, fault codes and symptoms. A photo of the module label helps. You can also reach us at <span class="ph">[Placeholder: phone]</span> or <span class="ph">[Placeholder: email]</span>.</p></div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 9. CONTACT ============ -->
+  <section class="section" id="contact" aria-labelledby="contact-title">
+    <div class="container">
+      <div class="contact-split">
+        <div class="contact-media on-dark">
+          <div class="img-ph dark" role="img" aria-label="Photo placeholder: repair bench"><span data-icon="camera" data-icon-class="i-lg"></span><b>Photo needed · Repair bench</b><span>Your own photo of the bench with a module being inspected. Portrait or square.</span></div>
+          <div class="contact-info">
+            <h3>Talk to us before you order</h3>
+            <ul>
+              <li><span data-icon="phone"></span><span><span class="ph">[Placeholder: phone]</span></span></li>
+              <li><span data-icon="mail"></span><span><span class="ph">[Placeholder: email]</span></span></li>
+              <li><span data-icon="clock"></span><span><span class="ph">[Placeholder: business hours]</span></span></li>
+              <li><span data-icon="pin"></span><span>St. Louis · mail-in service</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="contact-form">
+          <div class="eyebrow">Ask about my module</div>
+          <h2 id="contact-title">Not sure it's a match? Ask first.</h2>
+          <p>Tell us what you have. The part number and fault codes help us give a straight answer.</p>
+          <form id="inquiry-form" novalidate>
+            <div class="form-grid">
+              <div class="field">
+                <label for="c-name">Name <span class="req" aria-hidden="true">*</span></label>
+                <input class="input" id="c-name" name="name" type="text" autocomplete="name" required aria-describedby="c-name-err">
+                <div class="err" id="c-name-err"></div>
+              </div>
+              <div class="field">
+                <label for="c-email">Email <span class="req" aria-hidden="true">*</span></label>
+                <input class="input" id="c-email" name="email" type="email" autocomplete="email" required aria-describedby="c-email-err">
+                <div class="err" id="c-email-err"></div>
+              </div>
+              <div class="field">
+                <label for="c-phone">Phone <span class="opt">(optional)</span></label>
+                <input class="input" id="c-phone" name="phone" type="tel" autocomplete="tel" aria-describedby="c-phone-err">
+                <div class="err" id="c-phone-err"></div>
+              </div>
+              <div class="field">
+                <label for="c-pn">Module part number</label>
+                <input class="input mono" id="c-pn" name="part_number" type="text" spellcheck="false" aria-describedby="c-pn-hint">
+                <span class="hint" id="c-pn-hint">Printed on the module label.</span>
+              </div>
+              <fieldset class="fieldset full">
+                <legend>Vehicle</legend>
+                <div class="three">
+                  <div class="field"><label class="sr-only" for="c-year">Year</label><input class="input" id="c-year" name="vehicle_year" type="text" inputmode="numeric" placeholder="Year" maxlength="4"></div>
+                  <div class="field"><label class="sr-only" for="c-make">Make</label><input class="input" id="c-make" name="vehicle_make" type="text" placeholder="Make"></div>
+                  <div class="field"><label class="sr-only" for="c-model">Model</label><input class="input" id="c-model" name="vehicle_model" type="text" placeholder="Model"></div>
+                </div>
+              </fieldset>
+              <div class="field full">
+                <label for="c-codes">Fault codes</label>
+                <input class="input mono" id="c-codes" name="fault_codes" type="text" spellcheck="false" aria-describedby="c-codes-hint">
+                <span class="hint" id="c-codes-hint">Separate codes with commas. Include the tool readout if you have it.</span>
+              </div>
+              <div class="field full">
+                <label for="c-symptoms">Symptoms <span class="req" aria-hidden="true">*</span></label>
+                <textarea class="textarea" id="c-symptoms" name="symptoms" required aria-describedby="c-symptoms-hint c-symptoms-err"></textarea>
+                <span class="hint" id="c-symptoms-hint">Which lights are on, when it happens, and what's already been checked.</span>
+                <div class="err" id="c-symptoms-err"></div>
+              </div>
+              <div class="field full">
+                <label for="c-photo">Photo of module label <span class="opt">(optional)</span></label>
+                <div class="file-drop"><span data-icon="upload"></span><input id="c-photo" name="label_photo" type="file" accept="image/*" aria-describedby="c-photo-hint c-photo-err"></div>
+                <span class="hint" id="c-photo-hint">JPG, PNG or HEIC, up to 10 MB. Make sure the part number is readable.</span>
+                <div class="err" id="c-photo-err"></div>
+              </div>
+              <div class="full integration-note"><span data-icon="info"></span><span>Prototype: this form validates but does not send. The photo upload needs a Shopify form app that supports file attachments.</span></div>
+              <div class="full"><button class="btn btn-primary" type="submit">Send Inquiry <span data-icon="arrow"></span></button></div>
+            </div>
+            <div class="form-status" id="inquiry-status" role="status" aria-live="polite" hidden></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer id="site-footer"></footer>
+
+<script src="assets/services-data.js"></script>
+<script src="assets/site.js"></script>
+<script src="assets/home.js"></script>
+</body>
+</html>
