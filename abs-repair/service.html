@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Repair Service — [BUSINESS NAME]</title>
+<meta name="description" content="Mail-in ABS module repair service: supported vehicles and part numbers, covered symptoms, exclusions, what to send, turnaround, and warranty.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<header class="site-header" id="site-header"></header>
+
+<main id="main">
+  <div class="page-head light">
+    <div class="wrap"><ol class="crumbs" id="crumbs"></ol></div>
+  </div>
+  <div class="wrap" id="service-root"></div>
+</main>
+
+<footer class="site-footer" id="site-footer"></footer>
+<div class="mobile-buy" id="mobile-buy" hidden></div>
+
+<!-- Static twin of the JS-rendered question form so Netlify registers it at build time. -->
+<form name="module-question" method="POST" action="thanks.html" data-netlify="true" netlify-honeypot="bot-field" hidden aria-hidden="true">
+  <input type="hidden" name="form-name" value="module-question"><input type="hidden" name="service"><input name="bot-field"><input type="email" name="email"><textarea name="question"></textarea>
+</form>
+
+<script src="assets/services.js"></script>
+<script src="assets/site.js"></script>
+<script>
+/* Service page template. Reads ?s=<handle> and renders from SERVICES. */
+window.PAGE_INIT = function () {
+  var A = window.ABS, icon = A.icon, esc = A.esc, t = A.t, P = A.POLICY;
+  var root = document.getElementById('service-root');
+  var svc = A.serviceByHandle(A.qs('s'));
+  var crumbs = document.getElementById('crumbs');
+
+  if (!svc) {
+    crumbs.innerHTML = '<li><a href="index.html">Home</a></li><li>' + icon('chevron-right') + '</li><li><a href="catalog.html">Find My Repair</a></li><li>' + icon('chevron-right') + '</li><li>Service not found</li>';
+    root.innerHTML = '<div class="empty" style="margin:24px 0 64px"><div class="icon-tile">' + icon('search') + '</div><h3>That repair service is not available</h3><p>The link may be out of date, or the service has been removed from the catalog.</p><div class="row" style="justify-content:center"><a class="btn btn-primary" href="catalog.html">Browse repair services</a><a class="btn btn-outline" href="contact.html">Ask About My Module</a></div></div>';
+    return;
+  }
+
+  var mt = A.moduleType(svc.moduleType), acc = A.ACCEPTS[svc.send.accepts];
+  var turnaround = svc.turnaround || P.turnaround;
+  var warranty = svc.warranty || P.warrantySummary;
+  var unrepairable = svc.unrepairable || P.unrepairable;
+  var buy = A.buyUrl(svc);
+  var askHref = 'contact.html?service=' + encodeURIComponent(svc.handle) + (svc.partNumbers[0] ? '&pn=' + encodeURIComponent(svc.partNumbers[0]) : '');
+  document.title = svc.title + ' — ' + (/^\[/.test(A.SITE.name) ? 'Mail-In ABS Module Repair' : A.SITE.name);
+
+  crumbs.innerHTML = '<li><a href="index.html">Home</a></li><li>' + icon('chevron-right') + '</li><li><a href="catalog.html">Find My Repair</a></li><li>' + icon('chevron-right') + '</li><li><a href="catalog.html?type=' + mt.id + '">' + esc(mt.label) + '</a></li><li>' + icon('chevron-right') + '</li><li>' + esc(svc.title) + '</li>';
+
+  function list(items, cls) { return '<ul' + (cls ? ' class="' + cls + '"' : '') + '>' + items.map(function (x) { return '<li>' + t(x) + '</li>'; }).join('') + '</ul>'; }
+  function fitRow(f) { return '<tr><td>' + esc(f.make) + '</td><td>' + esc(f.model) + '</td><td>' + A.yearRange(f) + '</td><td>' + (f.notes ? t(f.notes) : '—') + '</td></tr>'; }
+  var pnChips = svc.partNumbers.map(function (p) { return '<code>' + esc(p) + '</code>'; }).join('');
+
+  var buyBtn = buy
+    ? '<a class="btn btn-primary btn-lg btn-block" href="' + buy + '">Purchase Repair Service ' + icon('cart') + '</a>'
+    : '<button class="btn btn-primary btn-lg btn-block" type="button" data-buy-stub>Purchase Repair Service ' + icon('cart') + '</button>';
+
+  root.innerHTML =
+    '<div class="service-layout">' +
+      '<div>' +
+        '<div class="gallery">' +
+          '<div class="gallery-main">' + A.phImg(svc.images[0] ? svc.images[0].caption : 'Required photo: module on bench', 'ratio-4x3') + '</div>' +
+          (svc.images.length > 1 ? '<div class="gallery-thumbs">' + svc.images.slice(1, 5).map(function (im) { return A.phImg(im.caption, 'ratio-1x1', 'Photo'); }).join('') + '</div>' : '') +
+        '</div>' +
+        '<div class="svc-title-block">' +
+          '<div class="chips"><span class="chip chip-slate">' + icon('package') + 'Mail-in repair service</span><span class="chip">' + esc(mt.label) + '</span><span class="chip">' + esc(acc.label) + '</span>' + (svc.sample ? '<span class="chip chip-sample">Sample data</span>' : '') + '</div>' +
+          '<h1>' + esc(svc.title) + '</h1>' +
+          '<p class="lead">' + t(svc.summary) + '</p>' +
+          '<nav class="subnav" aria-label="On this page">' +
+            '<a href="#fitment">Vehicles &amp; part numbers</a><a href="#scope">Covered symptoms</a><a href="#exclusions">Exclusions</a><a href="#send">What to send</a><a href="#turnaround">Turnaround</a><a href="#warranty">Warranty</a><a href="#shipping">Shipping</a><a href="#unrepairable">If unrepairable</a><a href="#programming">Programming</a><a href="#support">Support</a>' +
+          '</nav>' +
+        '</div>' +
+
+        '<div class="svc-sections">' +
+          '<section class="svc-section" id="fitment"><h2>' + icon('car') + 'Supported vehicles and module part numbers</h2>' +
+            '<h4>Module part numbers covered</h4><div class="pn-chips">' + pnChips + '</div>' +
+            (svc.partNumberNote ? '<p class="mt-2 small text-muted">' + t(svc.partNumberNote) + '</p>' : '') +
+            '<h4>Listed vehicles</h4>' +
+            (svc.fitment.length ? '<div class="table-wrap"><table><thead><tr><th>Make</th><th>Model</th><th>Model years</th><th>Notes</th></tr></thead><tbody>' + svc.fitment.map(fitRow).join('') + '</tbody></table></div>' : '<p>No vehicle list has been published for this service yet. Eligibility is determined by module part number.</p>') +
+            '<p class="notice mt-3">' + icon('info') + '<span>A vehicle match does not by itself establish compatibility. The same model can carry more than one module version. Confirm that the number on your module label is listed above before ordering; if it is not, <a href="' + askHref + '">ask us first</a>.</span></p>' +
+          '</section>' +
+
+          '<section class="svc-section" id="scope"><h2>' + icon('clipboard') + 'Covered symptoms and fault codes</h2>' +
+            '<div class="cols"><div><h4>Symptoms within scope</h4>' + list(svc.covered.symptoms) + '</div>' +
+            '<div><h4>Fault codes within scope</h4><div class="row">' + svc.covered.codes.map(function (c) { return '<code class="chip">' + t(c) + '</code>'; }).join('') + '</div></div></div>' +
+            '<h4>Limitations</h4>' + list(svc.covered.limitations) +
+            '<p class="mt-2 small text-muted">A matching code does not guarantee that the fault is inside the module. Wiring, sensors, grounds, and the hydraulic unit can produce similar codes. If your diagnosis is uncertain, contact us before ordering.</p>' +
+          '</section>' +
+
+          '<section class="svc-section" id="exclusions"><h2>' + icon('alert') + 'Exclusions and conditions that need assessment first</h2>' +
+            '<div class="cols"><div><h4>Not covered by this service</h4>' + list(svc.exclusions) + '</div>' +
+            '<div><h4>Contact us before ordering if</h4>' + list(svc.assessFirst) + '<a class="btn btn-outline btn-sm mt-2" href="' + askHref + '">Ask About My Module</a></div></div>' +
+          '</section>' +
+
+          '<section class="svc-section" id="send"><h2>' + icon('package') + 'Exactly what to send</h2>' +
+            '<p class="notice notice-dark">' + icon('package') + '<span><b>' + esc(acc.label) + '.</b> ' + esc(acc.text) + '</span></p>' +
+            '<div class="cols mt-3"><div><h4>Include in the box</h4>' + list(svc.send.what) + '</div>' +
+            (svc.send.doNot.length ? '<div><h4>Do not send</h4>' + list(svc.send.doNot) + '</div>' : '') + '</div>' +
+            '<p class="mt-3"><a href="shipping-instructions.html">Full packaging and shipping instructions</a></p>' +
+          '</section>' +
+
+          '<section class="svc-section" id="turnaround"><h2>' + icon('clock') + 'Turnaround</h2>' +
+            '<div class="time-split">' +
+              '<div class="time-box"><span>Transit to us</span><b>Carrier dependent</b><span>Your choice of carrier and service</span></div>' +
+              '<div class="time-plus">+</div>' +
+              '<div class="time-box" style="border-color:var(--orange)"><span>Bench turnaround</span><b>' + t(turnaround) + '</b><span>From check-in at our bench</span></div>' +
+            '</div>' +
+            '<p class="mt-3">' + esc(P.turnaroundNote) + ' Return transit is added after the repair ships. <span data-t>' + esc('[RETURN SHIPPING]') + '</span></p>' +
+          '</section>' +
+
+          '<section class="svc-section" id="warranty"><h2>' + icon('shield') + 'Warranty summary</h2>' +
+            '<p><b>Term:</b> ' + t(P.warrantyTerm) + '</p><p>' + t(warranty) + '</p>' +
+            '<p class="mt-2"><a href="warranty.html">Read the complete warranty terms</a></p>' +
+          '</section>' +
+
+          '<section class="svc-section" id="shipping"><h2>' + icon('truck') + 'Shipping instructions</h2>' +
+            '<ol style="padding-left:20px;display:grid;gap:6px"><li>Complete your purchase and keep the order number.</li><li>Remove the module as described for your vehicle; send only what this service lists above.</li><li>Pack it in a rigid box with at least 5 cm (2 in) of cushioning on every side. Never use an envelope or padded mailer.</li><li>Put a note with your order number, name, phone, and return address inside the box.</li><li>Ship to the address below with tracking. ' + t(P.inboundShipping) + '</li></ol>' +
+            '<div class="addr mt-3" data-site="shipTo"></div>' +
+            '<p class="mt-2"><a href="shipping-instructions.html">Detailed packaging guide</a></p>' +
+          '</section>' +
+
+          '<section class="svc-section" id="unrepairable"><h2>' + icon('x-circle') + 'If the module cannot be repaired</h2>' +
+            '<p>Some failures are only identifiable after inspection and are outside what a repair can address. In that case: ' + t(unrepairable) + '</p>' +
+            '<p class="mt-2"><b>Diagnostic / bench fee:</b> ' + t(P.diagnosticFee) + '</p>' +
+          '</section>' +
+
+          '<section class="svc-section" id="programming"><h2>' + icon('cpu') + 'Programming and calibration after reinstallation</h2>' +
+            '<p>' + t(svc.programming) + '</p>' +
+            '<p class="mt-2 small text-muted">Because this is your original module, its stored configuration is normally unchanged. Some vehicles still require a scan-tool procedure, brake bleed, or sensor calibration after any ABS module is reinstalled. Follow the note above for this module.</p>' +
+          '</section>' +
+
+          '<section class="svc-section" id="support"><h2>' + icon('message') + 'Support</h2>' +
+            '<p>Questions about eligibility, symptoms, or what to send? Contact us before you order.</p>' +
+            '<div class="row mt-2"><a class="btn btn-primary" href="' + askHref + '">Ask About My Module</a><a class="btn btn-outline" href="' + A.telHref() + '">' + icon('phone') + t(A.SITE.phone) + '</a><a class="btn btn-outline" href="' + A.mailHref() + '">' + icon('mail') + t(A.SITE.email) + '</a></div>' +
+            '<p class="mt-2 small text-muted">' + t(A.SITE.hours) + '</p>' +
+          '</section>' +
+        '</div>' +
+      '</div>' +
+
+      '<aside>' +
+        '<div class="purchase" id="purchase">' +
+          '<div class="price-row">' + A.priceHTML(svc, 'Repair service price') + '<div class="meta">' + esc(svc.priceNote) + '<br>Taxes and shipping at checkout</div></div>' +
+          '<div class="notice-mailin">' + icon('package') + '<div><b>Mail-in repair service — you send us your module</b><span>You receive your own module back after repair. No replacement unit is shipped.</span></div></div>' +
+          '<div><div class="label">Module part numbers covered</div><div class="pn-list">' + pnChips + '</div></div>' +
+          '<div><div class="label">Listed vehicles</div><div class="small">' + (A.fitmentSummary(svc) ? t(A.fitmentSummary(svc)) : 'Verify by part number') + '</div></div>' +
+          '<div class="qty"><label for="qty">Modules</label><input id="qty" type="number" min="1" max="10" value="1" inputmode="numeric"><span class="small text-muted">One service per module</span></div>' +
+          buyBtn +
+          '<p class="purchase-msg text-muted" id="purchase-msg" hidden></p>' +
+          '<a class="btn btn-outline btn-block" href="' + askHref + '">Ask About My Module</a>' +
+          '<ul class="trust">' +
+            '<li>' + icon('clock') + '<span><b>Bench turnaround:</b> ' + t(turnaround) + ' <span class="text-muted">(plus transit)</span></span></li>' +
+            '<li>' + icon('shield') + '<span><b>Warranty:</b> ' + t(P.warrantyTerm) + ' — <a href="warranty.html">terms</a></span></li>' +
+            '<li>' + icon('package') + '<span><b>Send:</b> ' + esc(acc.label) + '</span></li>' +
+            '<li>' + icon('phone') + '<span><b>Help:</b> ' + t(A.SITE.phone) + '</span></li>' +
+          '</ul>' +
+        '</div>' +
+        '<form class="ask-card mt-3" name="module-question" method="POST" action="thanks.html" data-netlify="true" netlify-honeypot="bot-field">' +
+          '<input type="hidden" name="form-name" value="module-question"><input type="hidden" name="service" value="' + esc(svc.title) + '">' +
+          '<p class="sr-only" aria-hidden="true"><label>Leave this field empty: <input name="bot-field" tabindex="-1" autocomplete="off"></label></p>' +
+          '<h3>Question about this repair?</h3><p>Tell us your vehicle, part number, and symptoms. We answer ' + t(P.responseTime) + '.</p>' +
+          '<div class="field"><label for="ask-email">Your email</label><input id="ask-email" name="email" type="email" required autocomplete="email"></div>' +
+          '<div class="field"><label for="ask-q">Your question</label><textarea id="ask-q" name="question" required placeholder="Vehicle, part number on the label, fault codes, symptoms"></textarea></div>' +
+          '<button class="btn btn-primary" type="submit">Send ' + icon('arrow-right') + '</button>' +
+          '<p class="alt">Prefer the full form with photo upload? <a href="' + askHref + '">Open the inquiry form</a>.</p>' +
+        '</form>' +
+      '</aside>' +
+    '</div>';
+
+  /* Mobile purchase bar */
+  var mb = document.getElementById('mobile-buy');
+  mb.hidden = false; document.body.classList.add('has-mobile-buy');
+  mb.innerHTML = A.priceHTML(svc, 'Repair service') + (buy ? '<a class="btn btn-primary" href="' + buy + '">Purchase</a>' : '<button class="btn btn-primary" type="button" data-buy-stub>Purchase</button>');
+
+  /* Shopify not connected yet → explain instead of failing silently */
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('[data-buy-stub]')) return;
+    var msg = document.getElementById('purchase-msg');
+    msg.hidden = false;
+    msg.innerHTML = 'Checkout is not connected yet. Set <code>SITE.shopify.domain</code> and this service\'s <code>shopify.variantId</code> in <code>assets/services.js</code>; this button then opens the Shopify cart with the service added.';
+    A.toast('Checkout is not connected to a Shopify store yet.');
+  });
+
+  /* Fill the shipping address block inserted above */
+  document.querySelectorAll('[data-site]').forEach(function (el) {
+    var v = A.SITE[el.getAttribute('data-site')]; if (v != null) el.innerHTML = t(v).replace(/\n/g, '<br>');
+  });
+  document.querySelectorAll('#service-root [data-t]').forEach(function (el) { el.innerHTML = t(el.textContent); });
+};
+</script>
+</body>
+</html>

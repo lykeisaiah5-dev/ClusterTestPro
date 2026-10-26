@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact — Ask About My Module — [BUSINESS NAME]</title>
+<meta name="description" content="Ask us about your ABS module before ordering. Send your vehicle, module part number, fault codes, symptoms, and a photo of the module label.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<header class="site-header" id="site-header"></header>
+
+<main id="main">
+  <div class="page-head">
+    <div class="wrap">
+      <ol class="crumbs"><li><a href="index.html">Home</a></li><li><i data-icon="chevron-right"></i></li><li>Contact</li></ol>
+      <h1>Ask about my module</h1>
+      <p class="lead">Not sure your module is eligible, or which service applies? Send the details below and we will check the part number against our services. We reply <span data-policy="responseTime"></span>.</p>
+    </div>
+  </div>
+
+  <section>
+    <div class="wrap">
+      <div class="contact-split">
+        <div class="contact-media">
+          <div>
+            <h3>Contact details</h3>
+            <ul class="contact-lines mt-2">
+              <li><i data-icon="phone"></i><a data-href="tel" href="#"><span data-site="phone"></span></a></li>
+              <li><i data-icon="mail"></i><a data-href="mailto" href="#"><span data-site="email"></span></a></li>
+              <li><i data-icon="clock"></i><span data-site="hours"></span></li>
+              <li><i data-icon="pin"></i><span data-site="location"></span></li>
+            </ul>
+          </div>
+          <div>
+            <h3 style="font-size:1.3rem">What helps us answer fast</h3>
+            <ul class="contact-lines mt-2" style="font-size:.95rem">
+              <li><i data-icon="check"></i><span>A clear photo of the label on the module</span></li>
+              <li><i data-icon="check"></i><span>Fault codes read from the ABS module, not just the engine</span></li>
+              <li><i data-icon="check"></i><span>When the symptom happens — cold, warm, over bumps, at speed</span></li>
+              <li><i data-icon="check"></i><span>Anything already replaced or tested</span></li>
+            </ul>
+          </div>
+          <div data-ph-img="Required photo: close-up of an ABS module label with the part number clearly legible — shows customers what to photograph" class="dark"></div>
+        </div>
+
+        <form class="contact-form" name="module-inquiry" method="POST" action="thanks.html" data-netlify="true" netlify-honeypot="bot-field" enctype="multipart/form-data" id="inquiry">
+          <h3>Module inquiry</h3>
+          <p>Fields marked * are required.</p>
+          <input type="hidden" name="form-name" value="module-inquiry">
+          <input type="hidden" name="source_page" value="contact">
+          <input type="hidden" name="service" id="c-service">
+          <p class="sr-only" aria-hidden="true"><label>Leave this field empty: <input name="bot-field" tabindex="-1" autocomplete="off"></label></p>
+          <div class="notice mt-1" id="service-note" hidden style="margin-bottom:16px"><i data-icon="info"></i><span>Asking about: <b id="service-name"></b></span></div>
+          <div class="form-grid">
+            <div class="field"><label for="c-name">Name *</label><input id="c-name" name="name" type="text" required autocomplete="name"></div>
+            <div class="field"><label for="c-email">Email *</label><input id="c-email" name="email" type="email" required autocomplete="email"></div>
+            <div class="field full"><label for="c-phone">Phone <span class="opt">(optional)</span></label><input id="c-phone" name="phone" type="tel" autocomplete="tel"></div>
+            <div class="field"><label for="c-year">Vehicle year *</label><input id="c-year" name="vehicle_year" type="text" inputmode="numeric" maxlength="4" required></div>
+            <div class="field"><label for="c-make">Make *</label><input id="c-make" name="vehicle_make" type="text" required></div>
+            <div class="field full"><label for="c-model">Model *</label><input id="c-model" name="vehicle_model" type="text" required></div>
+            <div class="field full"><label for="c-pn">Module part number <span class="opt">(from the label on the module)</span></label><input id="c-pn" name="part_number" type="text" autocomplete="off"><p class="hint">Enter it exactly as printed, including any suffix.</p></div>
+            <div class="field full"><label for="c-codes">Fault codes <span class="opt">(if known)</span></label><input id="c-codes" name="fault_codes" type="text" placeholder="Codes read from the ABS module"></div>
+            <div class="field full"><label for="c-symptoms">Symptoms *</label><textarea id="c-symptoms" name="symptoms" required placeholder="What the vehicle does, when it started, and anything already replaced or tested."></textarea></div>
+            <div class="field full"><label for="c-photo">Module label photo <span class="opt">(optional, image up to 10 MB)</span></label><input id="c-photo" name="label_photo" type="file" accept="image/*"></div>
+            <div class="full"><button class="btn btn-primary btn-lg btn-block" type="submit">Send My Module Details</button></div>
+            <p class="hint full">We use these details only to answer your inquiry. See our <a href="policies.html#privacy-policy">privacy policy</a>.</p>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer" id="site-footer"></footer>
+<script src="assets/services.js"></script>
+<script src="assets/site.js"></script>
+<script>
+/* Prefill from links on the catalog and service pages */
+window.PAGE_INIT = function () {
+  var A = window.ABS;
+  function set(id, v) { if (v) document.getElementById(id).value = v; }
+  set('c-pn', A.qs('pn')); set('c-year', A.qs('year')); set('c-make', A.qs('make')); set('c-model', A.qs('model'));
+  var svc = A.serviceByHandle(A.qs('service'));
+  if (svc) {
+    document.getElementById('c-service').value = svc.title;
+    document.getElementById('service-name').textContent = svc.title;
+    document.getElementById('service-note').hidden = false;
+  }
+};
+</script>
+</body>
+</html>

@@ -3,26 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Request Received — ABS Module Repair</title>
+<title>Message Received — [BUSINESS NAME]</title>
 <meta name="robots" content="noindex">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
-<style>
-:root{--bg:#0a0c0f;--surface:#111418;--border:#2a3446;--accent:#e8a020;--green:#1aff8c;--text:#d0d8e8;--text-mid:#9aa6ba;}
-*{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;line-height:1.6;}
-.box{max-width:520px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:36px;text-align:center;}
-.check{font-size:2.4rem;color:var(--green);margin-bottom:10px;}
-h1{font-family:'Orbitron',sans-serif;color:#fff;font-size:1.4rem;margin-bottom:12px;letter-spacing:.04em;}
-p{color:var(--text-mid);margin-bottom:24px;}
-a{display:inline-block;font-family:'Orbitron',sans-serif;font-weight:700;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;padding:14px 22px;border-radius:6px;background:var(--accent);color:#000;text-decoration:none;}
-</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
 </head>
 <body>
-  <div class="box">
-    <div class="check">✓</div>
-    <h1>Request received</h1>
-    <p>Thanks — we'll review your vehicle details and reply within one business day with a price and shipping instructions.</p>
-    <a href="/abs-repair/">Back to site</a>
+<header class="site-header" id="site-header"></header>
+<main id="main">
+  <div class="wrap">
+    <div class="thanks-box">
+      <span class="icon-tile orange"><i data-icon="check"></i></span>
+      <h1 style="font-size:2rem">Message received</h1>
+      <p>Thanks — we will check your module details against our repair services and reply <span data-policy="responseTime"></span>. If you included a label photo, we will confirm the part number from it.</p>
+      <p class="small">Need to add something? Email <a data-href="mailto" href="#"><span data-site="email"></span></a> or call <a data-href="tel" href="#"><span data-site="phone"></span></a> during <span data-site="hours"></span>.</p>
+      <div class="row" style="justify-content:center">
+        <a class="btn btn-primary" href="catalog.html">Browse repair services</a>
+        <a class="btn btn-outline" href="index.html">Back to home</a>
+      </div>
+    </div>
   </div>
+</main>
+<footer class="site-footer" id="site-footer"></footer>
+<script src="assets/services.js"></script>
+<script src="assets/site.js"></script>
 </body>
 </html>
